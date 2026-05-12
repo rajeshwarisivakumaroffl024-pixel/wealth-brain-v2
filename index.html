@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wealth Brain V2</title>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+--bg:#fff4f8;
+--card:#ffffff;
+--pink:#d4537e;
+--pink2:#f8d7e3;
+--text:#2e0c18;
+--muted:#7b5260;
+}
+body.dark{
+--bg:#161616;
+--card:#232323;
+--text:#f5f5f5;
+--muted:#b9b9b9;
+}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text)}
+.app{max-width:430px;margin:auto;min-height:100vh;padding-bottom:80px}
+.header{padding:18px}
+.title{font-size:24px;font-weight:700;color:var(--pink)}
+.subtitle{font-size:13px;color:var(--muted);margin-top:4px}
+.card{background:var(--card);padding:16px;border-radius:16px;margin:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.metric{font-size:22px;font-weight:700;color:var(--pink)}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+input,textarea,select{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;background:var(--card);color:var(--text);margin-top:6px}
+button{background:var(--pink);color:white;border:none;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);display:flex;justify-content:space-around;padding:10px;border-top:1px solid #eee;max-width:430px;margin:auto}
+.nav button{background:none;color:var(--muted);padding:6px;font-size:12px}
+.nav button.active{color:var(--pink)}
+.screen{display:none}
+.screen.active{display:block}
+.transaction{padding:12px;border-bottom:1px solid #eee}
+.small{font-size:12px;color:var(--muted)}
+.goal{margin-bottom:14px}
+.progress{height:8px;background:#eee;border-radius:10px;overflow:hidden;margin-top:8px}
+.progress div{height:100%;background:var(--pink)}
+.top-actions{display:flex;gap:10px;padding:0 16px 10px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+<div class="title">Raji's Wealth Brain</div>
+<div class="subtitle">Conversational Finance OS</div>
+</div>
+
+<div class="top-actions">
+<button onclick="toggleDarkMode()">🌙 Dark</button>
+<button onclick="document.getElementById('excelFile').click()">📊 Import Sheet</button>
+<input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
+</div>
+
+<div id="dashboard" class="screen active">
+<div class="card">
+<div class="label">Total Transactions</div>
+<div class="metric" id="totalTransactions">0</div>
+</div>
+
+<div class="row">
+<div class="card">
+<div class="label">DreamJar Goals</div>
+<div class="metric" id="goalCount">0</div>
+</div>
+<div class="card">
+<div class="label">Monthly SIP</div>
+<div class="metric" id="sipAmount">₹1000</div>
+</div>
+</div>
+
+<div class="card">
+<div class="label">Quick Add Transaction</div>
+<textarea id="quickEntry" placeholder="Spent ₹380 on coffee"></textarea>
+<button style="margin-top:10px" onclick="quickAdd()">Save</button>
+</div>
+</div>
+
+<div id="transactions" class="screen">
+<div class="card">
+<div class="label">Search Transactions</div>
+<input id="search" placeholder="coffee, zepto..." oninput="renderTransactions()">
+</div>
+<div id="transactionList"></div>
+</div>
+
+<div id="checkin" class="screen">
+<div class="card">
+<div class="label">Daily Check-in</div>
+<textarea id="checkinText" placeholder="What happened today?"></textarea>
+<button style="margin-top:10px" onclick="saveCheckin()">Save Check-in</button>
+</div>
+<div id="checkinHistory"></div>
+</div>
+
+<div id="goals" class="screen">
+<div class="card">
+<div class="label">Goal Name</div>
+<input id="goalName" placeholder="MacBook">
+<div class="label">Target Amount</div>
+<input id="goalTarget" type="number" placeholder="80000">
+<div class="label">Saved Amount</div>
+<input id="goalSaved" type="number" placeholder="0">
+<button style="margin-top:10px" onclick="addGoal()">Add Goal</button>
+</div>
+<div id="goalList"></div>
+</div>
+
+<div id="chat" class="screen">
+<div class="card">
+<div class="label">AI CFO</div>
+<div id="chatBox" style="min-height:200px;margin-bottom:12px"></div>
+<input id="chatInput" placeholder="Ask something...">
+<button style="margin-top:10px" onclick="sendChat()">Send</button>
+</div>
+</div>
+
+<div class="nav">
+<button class="active" onclick="showScreen('dashboard',this)">Dashboard</button>
+<button onclick="showScreen('transactions',this)">Ledger</button>
+<button onclick="showScreen('checkin',this)">Check-in</button>
+<button onclick="showScreen('goals',this)">Goals</button>
+<button onclick="showScreen('chat',this)">AI</button>
+</div>
+
+</div>
+
+<script>
+const STORAGE_KEY='wealth_brain_v2';
+
+let state={
+transactions:[],
+checkins:[],
+goals:[],
+sip:{monthly:1000},
+dark:false,
+chat:[]
+};
+
+function save(){
+localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+}
+
+function load(){
+const data=localStorage.getItem(STORAGE_KEY);
+if(data){
+state=JSON.parse(data);
+}
+if(state.dark){document.body.classList.add('dark')}
+renderAll();
+}
+
+function showScreen(id,btn){
+document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+}
+
+function toggleDarkMode(){
+state.dark=!state.dark;
+document.body.classList.toggle('dark');
+save();
+}
+
+function quickAdd(){
+const text=document.getElementById('quickEntry').value.trim();
+if(!text)return;
+
+state.transactions.push({
+id:'txn_'+Date.now(),
+date:new Date().toLocaleDateString(),
+description:text,
+category:'General'
+});
+
+save();
+renderTransactions();
+renderDashboard();
+document.getElementById('quickEntry').value='';
+}
+
+function saveCheckin(){
+const text=document.getElementById('checkinText').value.trim();
+if(!text)return;
+
+const entry={
+date:new Date().toLocaleDateString(),
+text
+};
+
+state.checkins.push(entry);
+
+state.transactions.push({
+id:'txn_'+Date.now(),
+date:entry.date,
+description:text,
+category:'Check-in'
+});
+
+save();
+renderCheckins();
+renderTransactions();
+renderDashboard();
+document.getElementById('checkinText').value='';
+}
+
+function renderCheckins(){
+const box=document.getElementById('checkinHistory');
+box.innerHTML='';
+
+state.checkins.slice().reverse().forEach(c=>{
+box.innerHTML+=`<div class="card"><div class="small">${c.date}</div><div>${c.text}</div></div>`;
+});
+}
+
+function renderTransactions(){
+const q=document.getElementById('search')?.value?.toLowerCase()||'';
+const box=document.getElementById('transactionList');
+box.innerHTML='';
+
+let txns=[...state.transactions].reverse();
+if(q){
+txns=txns.filter(t=>t.description.toLowerCase().includes(q));
+}
+
+if(!txns.length){
+box.innerHTML='<div class="card">No transactions yet</div>';
+return;
+}
+
+ txns.forEach(t=>{
+box.innerHTML+=`
+<div class="card">
+<div class="transaction">
+<div class="small">${t.date}</div>
+<div>${t.description}</div>
+<div style="margin-top:10px;display:flex;gap:8px">
+<button onclick="editTxn('${t.id}')">Edit</button>
+<button onclick="deleteTxn('${t.id}')">Delete</button>
+</div>
+</div>
+</div>`;
+});
+}
+
+function editTxn(id){
+const txn=state.transactions.find(t=>t.id===id);
+if(!txn)return;
+
+const updated=prompt('Edit transaction',txn.description);
+if(updated!==null){
+txn.description=updated;
+save();
+renderTransactions();
+}
+}
+
+function deleteTxn(id){
+state.transactions=state.transactions.filter(t=>t.id!==id);
+save();
+renderTransactions();
+renderDashboard();
+}
+
+function addGoal(){
+const name=document.getElementById('goalName').value;
+const target=Number(document.getElementById('goalTarget').value);
+const saved=Number(document.getElementById('goalSaved').value);
+
+if(!name||!target)return;
+
+state.goals.push({
+id:'goal_'+Date.now(),
+name,
+target,
+saved
+});
+
+save();
+renderGoals();
+renderDashboard();
+
+['goalName','goalTarget','goalSaved'].forEach(id=>document.getElementById(id).value='');
+}
+
+function renderGoals(){
+const box=document.getElementById('goalList');
+box.innerHTML='';
+
+state.goals.forEach(g=>{
+const pct=Math.min(100,Math.round((g.saved/g.target)*100));
+
+box.innerHTML+=`
+<div class="card goal">
+<div style="display:flex;justify-content:space-between">
+<strong>${g.name}</strong>
+<div>
+<button onclick="editGoal('${g.id}')">Edit</button>
+</div>
+</div>
+<div class="small">₹${g.saved} / ₹${g.target}</div>
+<div class="progress"><div style="width:${pct}%"></div></div>
+</div>`;
+});
+}
+
+function editGoal(id){
+const g=state.goals.find(x=>x.id===id);
+if(!g)return;
+
+const target=prompt('Update target amount',g.target);
+const saved=prompt('Update saved amount',g.saved);
+
+if(target!==null)g.target=Number(target);
+if(saved!==null)g.saved=Number(saved);
+
+save();
+renderGoals();
+}
+
+function renderDashboard(){
+document.getElementById('totalTransactions').textContent=state.transactions.length;
+document.getElementById('goalCount').textContent=state.goals.length;
+document.getElementById('sipAmount').textContent='₹'+state.sip.monthly;
+}
+
+function sendChat(){
+const input=document.getElementById('chatInput');
+const text=input.value.trim();
+if(!text)return;
+
+const box=document.getElementById('chatBox');
+
+box.innerHTML+=`<div class="card"><strong>You:</strong><br>${text}</div>`;
+
+const response=getOfflineAI(text);
+
+setTimeout(()=>{
+box.innerHTML+=`<div class="card"><strong>Wealth Brain:</strong><br>${response}</div>`;
+box.scrollTop=box.scrollHeight;
+},500);
+
+input.value='';
+}
+
+function getOfflineAI(text){
+const lower=text.toLowerCase();
+
+if(lower.includes('spending')){
+return `You currently have ${state.transactions.length} tracked transactions. Continue using check-ins daily for better pattern analysis.`;
+}
+
+if(lower.includes('goal')){
+return `You currently have ${state.goals.length} active goals in DreamJar.`;
+}
+
+return `AI connection is not configured yet, but your financial data is still being safely tracked locally.`;
+}
+
+function importExcel(event){
+const file=event.target.files[0];
+if(!file)return;
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+const data=new Uint8Array(e.target.result);
+const workbook=XLSX.read(data,{type:'array'});
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+const rows=XLSX.utils.sheet_to_json(sheet);
+
+rows.forEach(row=>{
+state.transactions.push({
+id:'txn_'+Date.now()+Math.random(),
+date:row.Date||row.date||new Date().toLocaleDateString(),
+description:row.Description||row.description||JSON.stringify(row),
+category:row.Category||'Imported'
+});
+});
+
+save();
+renderTransactions();
+renderDashboard();
+alert('Excel imported successfully!');
+};
+
+reader.readAsArrayBuffer(file);
+}
+
+function renderAll(){
+renderDashboard();
+renderTransactions();
+renderCheckins();
+renderGoals();
+}
+
+load();
+</script>
+</body>
+</html>
