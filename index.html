@@ -1,409 +1,1533 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Wealth Brain V2</title>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="theme-color" content="#D4537E"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Raji's Wealth Brain"/>
+<title>Raji's Wealth Brain</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
---bg:#fff4f8;
---card:#ffffff;
---pink:#d4537e;
---pink2:#f8d7e3;
---text:#2e0c18;
---muted:#7b5260;
+  --p50:#FDF0F5;--p100:#F9D0E2;--p200:#F3A8C8;--p300:#EB7CAA;--p400:#D4537E;--p500:#B83D66;--p600:#993556;--p700:#72243E;--p800:#4B1528;--p900:#2E0C18;
+  --bg:#FDF0F5;--surface:#fff;--card:#fff;--border:#F3A8C8;--border2:#F9D0E2;
+  --text:#2E0C18;--text2:#72243E;--text3:#B83D66;--muted:#993556;
+  --green:#1D9E75;--amber:#BA7517;--red:#D85A30;
+  --radius:14px;--radius-sm:10px;--radius-xs:7px;
+  --shadow:0 2px 16px rgba(180,60,100,0.10);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --transition:0.25s ease;
 }
-body.dark{
---bg:#161616;
---card:#232323;
---text:#f5f5f5;
---muted:#b9b9b9;
+.dark{
+  --bg:#1A0A10;--surface:#271018;--card:#2E1420;--border:#4A1E30;--border2:#3A1828;
+  --text:#F9D0E2;--text2:#F3A8C8;--text3:#EB7CAA;--muted:#D4537E;
+  --shadow:0 2px 16px rgba(0,0,0,0.4);
 }
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
-body{margin:0;background:var(--bg);color:var(--text)}
-.app{max-width:430px;margin:auto;min-height:100vh;padding-bottom:80px}
-.header{padding:18px}
-.title{font-size:24px;font-weight:700;color:var(--pink)}
-.subtitle{font-size:13px;color:var(--muted);margin-top:4px}
-.card{background:var(--card);padding:16px;border-radius:16px;margin:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.row{display:flex;gap:10px}
-.row>*{flex:1}
-.metric{font-size:22px;font-weight:700;color:var(--pink)}
-.label{font-size:12px;color:var(--muted);margin-bottom:6px}
-input,textarea,select{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;background:var(--card);color:var(--text);margin-top:6px}
-button{background:var(--pink);color:white;border:none;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
-.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);display:flex;justify-content:space-around;padding:10px;border-top:1px solid #eee;max-width:430px;margin:auto}
-.nav button{background:none;color:var(--muted);padding:6px;font-size:12px}
-.nav button.active{color:var(--pink)}
-.screen{display:none}
-.screen.active{display:block}
-.transaction{padding:12px;border-bottom:1px solid #eee}
-.small{font-size:12px;color:var(--muted)}
-.goal{margin-bottom:14px}
-.progress{height:8px;background:#eee;border-radius:10px;overflow:hidden;margin-top:8px}
-.progress div{height:100%;background:var(--pink)}
-.top-actions{display:flex;gap:10px;padding:0 16px 10px}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--text);transition:background var(--transition),color var(--transition);}
+#app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto;position:relative;overflow:hidden;background:var(--bg);transition:background var(--transition);}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border2);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);transition:background var(--transition),border-color var(--transition);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 2px 6px;border:none;background:none;cursor:pointer;gap:2px;font-size:9px;color:var(--muted);transition:color .2s;}
+.nav-btn.active{color:var(--p400);}
+.nav-btn svg{width:20px;height:20px;stroke-width:1.8;}
+.nav-btn.active svg{stroke-width:2.2;}
+
+/* SCREENS */
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden;padding-bottom:68px;}
+.screen.active{display:flex;}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 8px;}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* HEADER */
+.topbar{padding:14px 16px 8px;background:var(--bg);flex-shrink:0;transition:background var(--transition);}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;}
+.topbar h1{font-size:19px;font-weight:700;color:var(--p500);letter-spacing:-0.4px;}
+.topbar p{font-size:11px;color:var(--text3);margin-top:1px;}
+.avatar-btn{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--p300),var(--p500));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;border:none;cursor:pointer;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.icon-btn{width:30px;height:30px;border-radius:50%;background:var(--p50);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--border2);transition:background var(--transition),border-color var(--transition);}
+.card-sm{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:1px solid var(--border2);transition:background var(--transition);}
+.label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.val{font-size:26px;font-weight:700;color:var(--p500);}
+.val-sm{font-size:18px;font-weight:700;color:var(--p500);}
+.sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* METRIC GRID */
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.metric-card{background:var(--card);border-radius:var(--radius-sm);padding:13px;border:1px solid var(--border2);box-shadow:var(--shadow);transition:background var(--transition);}
+.metric-card .m-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.metric-card .m-val{font-size:20px;font-weight:700;color:var(--p500);}
+.metric-card .m-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.metric-card.green .m-val{color:var(--green);}
+.metric-card.amber .m-val{color:var(--amber);}
+.metric-card.red .m-val{color:var(--red);}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:12px;}
+.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.progress-name{font-size:13px;font-weight:500;color:var(--text);}
+.progress-amt{font-size:12px;color:var(--muted);}
+.progress-track{height:6px;background:var(--p100);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--p300),var(--p500));border-radius:3px;transition:width .6s ease;}
+.progress-fill.green{background:linear-gradient(90deg,#5DCAA5,var(--green));}
+
+/* ACCOUNTS */
+.account-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border2);}
+.account-item:last-child{border-bottom:none;}
+.account-dot{width:8px;height:8px;border-radius:50%;margin-right:10px;flex-shrink:0;}
+.account-info{flex:1;}
+.account-name{font-size:13px;font-weight:600;color:var(--text);}
+.account-purpose{font-size:11px;color:var(--muted);margin-top:1px;}
+.account-bal{font-size:14px;font-weight:700;color:var(--p500);}
+.account-bal.neg{color:var(--red);}
+.account-bal.unset{color:var(--muted);font-size:12px;font-weight:500;}
+.edit-dot{width:18px;height:18px;border-radius:50%;background:var(--p50);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-left:8px;cursor:pointer;flex-shrink:0;font-size:10px;}
+
+/* BUTTONS */
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--p400),var(--p600));color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;}
+.btn-primary:active{transform:scale(.98);}
+.btn-secondary{padding:9px 16px;background:var(--p50);color:var(--p500);border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;}
+.btn-secondary:active{transform:scale(.98);}
+.btn-pink-outline{width:100%;padding:11px;background:transparent;color:var(--p500);border:1.5px solid var(--p300);border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+.btn-sm{padding:6px 12px;background:var(--p50);color:var(--p500);border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;}
+
+/* INPUTS */
+input[type=text],input[type=number],input[type=date],textarea,select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:14px;color:var(--text);background:var(--surface);outline:none;font-family:var(--font);appearance:none;transition:border-color .2s,background var(--transition),color var(--transition);}
+input:focus,textarea:focus,select:focus{border-color:var(--p400);}
+textarea{resize:none;min-height:70px;line-height:1.5;}
+.input-group{margin-bottom:12px;}
+.input-label{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:5px;display:block;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23B83D66' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+
+/* CHAT */
+.chat-messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.chat-messages::-webkit-scrollbar{display:none;}
+.msg-row{display:flex;gap:8px;max-width:92%;}
+.msg-row.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-row.bot{align-self:flex-start;}
+.bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.55;}
+.bot .bubble{background:var(--card);color:var(--text);border-radius:4px 16px 16px 16px;border:1px solid var(--border2);}
+.user .bubble{background:linear-gradient(135deg,var(--p400),var(--p600));color:#fff;border-radius:16px 4px 16px 16px;}
+.msg-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.bot-av{background:var(--p100);color:var(--p600);}
+.user-av{background:var(--p500);color:#fff;}
+.chat-input-bar{padding:9px 12px;background:var(--surface);border-top:1px solid var(--border2);display:flex;gap:8px;align-items:center;flex-shrink:0;transition:background var(--transition);}
+.chat-input-bar input{flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:24px;font-size:14px;outline:none;background:var(--bg);}
+.chat-input-bar input:focus{border-color:var(--p400);}
+.send-btn{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--p400),var(--p600));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.send-btn svg{width:16px;height:16px;}
+.chips{padding:6px 12px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{white-space:nowrap;padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--p500);font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;}
+.chip:active{background:var(--p50);}
+
+/* CATCHUP */
+.date-block{background:var(--card);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;border:1px solid var(--border2);box-shadow:var(--shadow);}
+.date-header{padding:12px 16px;background:linear-gradient(135deg,var(--p400),var(--p600));display:flex;align-items:center;justify-content:space-between;}
+.date-header .date-str{font-size:14px;font-weight:700;color:#fff;}
+.date-status{font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600;}
+.date-status.done{background:rgba(255,255,255,.25);color:#fff;}
+.date-status.pending{background:rgba(255,200,0,.25);color:#fff;}
+.date-body{padding:14px 16px;}
+.date-q{font-size:13px;color:var(--text2);margin-bottom:10px;font-weight:500;}
+.acc-mini-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.acc-mini-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.acc-mini-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;}
+.acc-mini-input{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;color:var(--text);background:var(--bg);outline:none;}
+.acc-mini-input:focus{border-color:var(--p400);}
+.save-day-btn{width:100%;padding:10px;background:var(--p50);border:1.5px solid var(--p300);border-radius:var(--radius-xs);color:var(--p500);font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;}
+.save-day-btn:active{background:var(--p100);}
+.day-saved{text-align:center;padding:10px;font-size:13px;color:var(--green);font-weight:600;}
+
+/* TAX */
+.tax-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;}
+.tax-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border2);}
+.tax-row:last-child{border-bottom:none;}
+.tax-lbl{font-size:13px;color:var(--muted);flex:1;}
+.tax-val{font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%;}
+.tax-val.ok{color:var(--green);}
+.tax-val.warn{color:var(--amber);}
+.info-banner{background:var(--p50);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--p700);line-height:1.6;}
+.info-banner strong{color:var(--p500);}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(46,12,24,.5);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:430px;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0));max-height:85vh;overflow-y:auto;transition:background var(--transition);}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:17px;font-weight:700;color:var(--p500);margin-bottom:14px;}
+
+/* SECTION TITLE */
+.section-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 10px;}
+
+/* WEEK ALERT */
+.week-alert{background:linear-gradient(135deg,var(--p400),var(--p600));border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;color:#fff;}
+.week-alert .wa-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.week-alert .wa-sub{font-size:12px;opacity:.85;}
+
+/* LOADING DOTS */
+.typing-dot{display:inline-block;width:6px;height:6px;background:var(--p300);border-radius:50%;margin:0 2px;animation:bounce .9s infinite;}
+.typing-dot:nth-child(2){animation-delay:.2s;}
+.typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+/* BADGES */
+.pink-badge{display:inline-block;padding:3px 8px;border-radius:10px;background:var(--p100);color:var(--p600);font-size:11px;font-weight:600;}
+.green-badge{display:inline-block;padding:3px 8px;border-radius:10px;background:#E1F5EE;color:var(--green);font-size:11px;font-weight:600;}
+.red-badge{display:inline-block;padding:3px 8px;border-radius:10px;background:#FAECE7;color:var(--red);font-size:11px;font-weight:600;}
+.amber-badge{display:inline-block;padding:3px 8px;border-radius:10px;background:#FDF3DC;color:var(--amber);font-size:11px;font-weight:600;}
+
+/* LEDGER / TRANSACTIONS */
+.ledger-filter-bar{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;flex-shrink:0;}
+.ledger-filter-bar::-webkit-scrollbar{display:none;}
+.filter-pill{white-space:nowrap;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.filter-pill.active{background:var(--p400);color:#fff;border-color:var(--p400);}
+.ledger-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ledger-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:5;}
+.ledger-table td{padding:9px 10px;border-bottom:1px solid var(--border2);vertical-align:middle;color:var(--text);}
+.ledger-table tr:last-child td{border-bottom:none;}
+.ledger-table tr:hover td{background:var(--p50);}
+.tx-credit{color:var(--green);font-weight:700;}
+.tx-debit{color:var(--red);font-weight:700;}
+.tx-cat{display:inline-block;padding:2px 6px;border-radius:6px;background:var(--p50);color:var(--p600);font-size:10px;font-weight:600;}
+.tx-acc-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;}
+.ledger-wrap{background:var(--card);border-radius:var(--radius);border:1px solid var(--border2);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow);}
+.ledger-scroll{overflow-x:auto;overflow-y:auto;max-height:400px;}
+.ledger-scroll::-webkit-scrollbar{height:4px;width:4px;}
+.ledger-scroll::-webkit-scrollbar-thumb{background:var(--p200);border-radius:2px;}
+.ledger-summary-bar{display:flex;gap:0;border-bottom:1px solid var(--border2);}
+.ledger-sum-item{flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border2);}
+.ledger-sum-item:last-child{border-right:none;}
+.ledger-sum-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+.ledger-sum-val{font-size:15px;font-weight:700;color:var(--p500);}
+.ledger-sum-val.g{color:var(--green);}
+.ledger-sum-val.r{color:var(--red);}
+.ledger-empty{text-align:center;padding:28px;font-size:13px;color:var(--muted);}
+.tx-action-btn{border:none;background:none;cursor:pointer;padding:2px 5px;font-size:12px;color:var(--muted);}
+.tx-action-btn:hover{color:var(--p400);}
+
+/* SIP CARD */
+.sip-detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border2);font-size:13px;}
+.sip-detail-row:last-child{border-bottom:none;}
+.sip-detail-lbl{color:var(--muted);}
+.sip-detail-val{font-weight:600;color:var(--text);}
+
+/* DARK MODE TOGGLE */
+.dark-toggle{width:30px;height:18px;border-radius:9px;background:var(--border);border:none;cursor:pointer;position:relative;transition:background .3s;}
+.dark-toggle.on{background:var(--p400);}
+.dark-toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .3s;}
+.dark-toggle.on::after{left:14px;}
+
+/* UTIL */
+.row{display:flex;gap:10px;}
+.row>*{flex:1;}
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+.center{text-align:center;}
+.divider{height:1px;background:var(--border2);margin:10px 0;}
 </style>
 </head>
 <body>
-<div class="app">
+<div id="app">
 
-<div class="header">
-<div class="title">Raji's Wealth Brain</div>
-<div class="subtitle">Conversational Finance OS</div>
+<!-- BOTTOM NAV — 6 tabs -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchScreen('dashboard')" id="nav-dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" onclick="switchScreen('ledger')" id="nav-ledger">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+    Ledger
+  </button>
+  <button class="nav-btn" onclick="switchScreen('checkin')" id="nav-checkin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14l3 3 5-5"/></svg>
+    Check-in
+  </button>
+  <button class="nav-btn" onclick="switchScreen('catchup')" id="nav-catchup">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    Catch-up
+  </button>
+  <button class="nav-btn" onclick="switchScreen('chat')" id="nav-chat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    CFO Chat
+  </button>
+  <button class="nav-btn" onclick="switchScreen('tax')" id="nav-tax">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+    Tax
+  </button>
+</nav>
+
+<!-- ══════════════════════════════ DASHBOARD ══ -->
+<div class="screen active" id="screen-dashboard">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><h1>Raji's Wealth Brain</h1><p id="dash-date">Loading...</p></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">🌙</button>
+        <button class="avatar-btn" onclick="openUpdateModal()">R</button>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div id="week-alert-box"></div>
+
+    <div class="section-title">Account balances</div>
+    <div class="card" style="padding:4px 14px;">
+      <div class="account-item">
+        <div class="account-dot" style="background:var(--p400)"></div>
+        <div class="account-info"><div class="account-name">ICICI (Money Moves)</div><div class="account-purpose">Day-to-day spending</div></div>
+        <div id="bal-icici" class="account-bal unset">—</div>
+        <div class="edit-dot" onclick="openBalModal('icici')">✏️</div>
+      </div>
+      <div class="account-item">
+        <div class="account-dot" style="background:var(--green)"></div>
+        <div class="account-info"><div class="account-name">UBI Wealth Vault</div><div class="account-purpose">Fees, buffer, safety</div></div>
+        <div id="bal-ubi" class="account-bal unset">—</div>
+        <div class="edit-dot" onclick="openBalModal('ubi')">✏️</div>
+      </div>
+      <div class="account-item">
+        <div class="account-dot" style="background:var(--amber)"></div>
+        <div class="account-info"><div class="account-name">Slice</div><div class="account-purpose">Lifestyle reserve</div></div>
+        <div id="bal-slice" class="account-bal unset">—</div>
+        <div class="edit-dot" onclick="openBalModal('slice')">✏️</div>
+      </div>
+      <div class="account-item">
+        <div class="account-dot" style="background:var(--red)"></div>
+        <div class="account-info"><div class="account-name">Credit Card (6004)</div><div class="account-purpose">Outstanding bill</div></div>
+        <div id="bal-cc" class="account-bal unset">—</div>
+        <div class="edit-dot" onclick="openBalModal('cc')">✏️</div>
+      </div>
+    </div>
+
+    <div class="section-title">Net position</div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="m-label">Total liquid</div>
+        <div class="m-val" id="total-liquid">—</div>
+        <div class="m-sub">ICICI + UBI + Slice</div>
+      </div>
+      <div class="metric-card red">
+        <div class="m-label">CC outstanding</div>
+        <div class="m-val" id="total-cc">—</div>
+        <div class="m-sub">Due this cycle</div>
+      </div>
+      <div class="metric-card green">
+        <div class="m-label">MacBook saved</div>
+        <div class="m-val" id="dash-macbook">—</div>
+        <div class="m-sub" id="dash-macbook-sub">Target ₹79,999</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="m-label">Safety net</div>
+        <div class="m-val" id="dash-safety">—</div>
+        <div class="m-sub" id="dash-safety-sub">Target ₹15,000</div>
+      </div>
+    </div>
+
+    <div class="section-title">SIP tracker</div>
+    <div class="card">
+      <div class="sip-detail-row"><span class="sip-detail-lbl">Monthly SIP</span><span class="sip-detail-val" id="d-sip-monthly">₹1,000/month</span></div>
+      <div class="sip-detail-row"><span class="sip-detail-lbl">Total invested</span><span class="sip-detail-val" id="d-sip-total">—</span></div>
+      <div class="sip-detail-row"><span class="sip-detail-lbl">Started</span><span class="sip-detail-val">Oct 2025</span></div>
+      <div class="sip-detail-row"><span class="sip-detail-lbl">Fund type</span><span class="sip-detail-val" id="d-sip-fund">—</span></div>
+      <div class="sip-detail-row"><span class="sip-detail-lbl">Projected (10yr)</span><span class="sip-detail-val" id="d-sip-proj">—</span></div>
+      <div class="sip-detail-row"><span class="sip-detail-lbl">Status</span><span class="sip-detail-val" style="color:var(--green)">Active ✓</span></div>
+      <button class="btn-pink-outline" onclick="openSIPModal()" style="margin-top:10px">Edit SIP details</button>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="section-title" style="margin-bottom:0">Dream jar</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-sm" onclick="openAddGoalModal()">+ Goal</button>
+        <button class="btn-sm" onclick="switchScreen('ledger')">View all →</button>
+      </div>
+    </div>
+    <div id="goals-container"></div>
+
+    <div class="section-title">Spending snapshot</div>
+    <div class="card" id="spending-snapshot">
+      <div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">Log check-ins to see your spending breakdown</div>
+    </div>
+
+    <div class="section-title" style="margin-top:4px">Import data</div>
+    <div class="card" style="padding:12px 14px;">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.5">Upload your Google Sheet export (.xlsx or .csv) to populate accounts and ledger.</div>
+      <label style="display:block;padding:12px;background:var(--p50);border:1.5px dashed var(--p300);border-radius:var(--radius-xs);text-align:center;cursor:pointer;font-size:13px;color:var(--p500);font-weight:600;">
+        📥 Tap to import sheet
+        <input type="file" id="import-file" accept=".xlsx,.csv" style="display:none" onchange="importSheet(event)"/>
+      </label>
+      <div id="import-status" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px"></div>
+    </div>
+  </div>
 </div>
 
-<div class="top-actions">
-<button onclick="toggleDarkMode()">🌙 Dark</button>
-<button onclick="document.getElementById('excelFile').click()">📊 Import Sheet</button>
-<input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
+<!-- ══════════════════════════════ LEDGER ══ -->
+<div class="screen" id="screen-ledger">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><h1>Ledger</h1><p>Full transaction history</p></div>
+      <button class="btn-sm" onclick="openAddTxModal()">+ Entry</button>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="ledger-filter-bar" id="ledger-filters">
+      <span class="filter-pill active" onclick="setLedgerFilter('all',this)">All</span>
+      <span class="filter-pill" onclick="setLedgerFilter('icici',this)">ICICI</span>
+      <span class="filter-pill" onclick="setLedgerFilter('ubi',this)">UBI</span>
+      <span class="filter-pill" onclick="setLedgerFilter('slice',this)">Slice</span>
+      <span class="filter-pill" onclick="setLedgerFilter('cc',this)">Credit Card</span>
+      <span class="filter-pill" onclick="setLedgerFilter('sip',this)">SIP</span>
+      <span class="filter-pill" onclick="setLedgerFilter('safety',this)">Safety Net</span>
+    </div>
+
+    <div class="ledger-wrap">
+      <div class="ledger-summary-bar" id="ledger-summary-bar">
+        <div class="ledger-sum-item"><div class="ledger-sum-label">Entries</div><div class="ledger-sum-val" id="ls-count">0</div></div>
+        <div class="ledger-sum-item"><div class="ledger-sum-label">Total in</div><div class="ledger-sum-val g" id="ls-in">₹0</div></div>
+        <div class="ledger-sum-item"><div class="ledger-sum-label">Total out</div><div class="ledger-sum-val r" id="ls-out">₹0</div></div>
+      </div>
+      <div class="ledger-scroll">
+        <table class="ledger-table" id="ledger-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Account</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ledger-body">
+            <tr><td colspan="6" class="ledger-empty">No transactions yet. Submit a check-in or import your sheet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="dashboard" class="screen active">
-<div class="card">
-<div class="label">Total Transactions</div>
-<div class="metric" id="totalTransactions">0</div>
+<!-- ══════════════════════════════ CHECK-IN ══ -->
+<div class="screen" id="screen-checkin">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><h1>Daily check-in</h1><p id="checkin-date">Today</p></div>
+      <span class="pink-badge" id="checkin-streak">0 day streak</span>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="info-banner">Tell me what happened today from each account. Write amounts + what for. Write <strong>nil</strong> if nothing happened.</div>
+    <div class="section-title">Today's transactions</div>
+    <div class="card">
+      <div class="input-group">
+        <label class="input-label">💳 ICICI (day-to-day)</label>
+        <textarea id="ci-icici" placeholder="e.g. ₹140 auto morning, ₹50 coffee Shiv Sagar, nil"></textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">🏦 UBI Wealth Vault</label>
+        <textarea id="ci-ubi" placeholder="e.g. ₹500 grocery Zepto, nil"></textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">✨ Slice</label>
+        <textarea id="ci-slice" placeholder="e.g. ₹323 California Burrito, nil"></textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">💳 Credit Card (6004)</label>
+        <textarea id="ci-cc" placeholder="e.g. ₹256 Belgium Waffle, nil"></textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">🍎 MacBook savings added today?</label>
+        <input type="text" id="ci-macbook" placeholder="e.g. ₹200 from ICICI, nil"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">🪺 Safety net added today?</label>
+        <input type="text" id="ci-safety" placeholder="e.g. ₹100, nil"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">💰 SIP deducted today?</label>
+        <input type="text" id="ci-sip" placeholder="e.g. ₹1000 auto-debit, nil"/>
+      </div>
+      <button class="btn-primary" onclick="submitCheckin()">Save today's check-in ✓</button>
+    </div>
+    <div id="recent-log"></div>
+  </div>
 </div>
 
-<div class="row">
-<div class="card">
-<div class="label">DreamJar Goals</div>
-<div class="metric" id="goalCount">0</div>
-</div>
-<div class="card">
-<div class="label">Monthly SIP</div>
-<div class="metric" id="sipAmount">₹1000</div>
-</div>
-</div>
-
-<div class="card">
-<div class="label">Quick Add Transaction</div>
-<textarea id="quickEntry" placeholder="Spent ₹380 on coffee"></textarea>
-<button style="margin-top:10px" onclick="quickAdd()">Save</button>
-</div>
+<!-- ══════════════════════════════ CATCH-UP ══ -->
+<div class="screen" id="screen-catchup">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><h1>Catch-up</h1><p>Fill in missing days</p></div>
+      <span class="pink-badge" id="missing-count">Loading...</span>
+    </div>
+  </div>
+  <div class="scroll-area" id="catchup-scroll">
+    <div class="info-banner">Your sheet has gaps from late April to today. Fill each day — even roughly. Write <strong>nil</strong> if nothing happened.</div>
+    <div id="catchup-dates"></div>
+  </div>
 </div>
 
-<div id="transactions" class="screen">
-<div class="card">
-<div class="label">Search Transactions</div>
-<input id="search" placeholder="coffee, zepto..." oninput="renderTransactions()">
-</div>
-<div id="transactionList"></div>
-</div>
-
-<div id="checkin" class="screen">
-<div class="card">
-<div class="label">Daily Check-in</div>
-<textarea id="checkinText" placeholder="What happened today?"></textarea>
-<button style="margin-top:10px" onclick="saveCheckin()">Save Check-in</button>
-</div>
-<div id="checkinHistory"></div>
-</div>
-
-<div id="goals" class="screen">
-<div class="card">
-<div class="label">Goal Name</div>
-<input id="goalName" placeholder="MacBook">
-<div class="label">Target Amount</div>
-<input id="goalTarget" type="number" placeholder="80000">
-<div class="label">Saved Amount</div>
-<input id="goalSaved" type="number" placeholder="0">
-<button style="margin-top:10px" onclick="addGoal()">Add Goal</button>
-</div>
-<div id="goalList"></div>
-</div>
-
-<div id="chat" class="screen">
-<div class="card">
-<div class="label">AI CFO</div>
-<div id="chatBox" style="min-height:200px;margin-bottom:12px"></div>
-<input id="chatInput" placeholder="Ask something...">
-<button style="margin-top:10px" onclick="sendChat()">Send</button>
-</div>
+<!-- ══════════════════════════════ CFO CHAT ══ -->
+<div class="screen" id="screen-chat">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><h1>Ask your CFO</h1><p id="chat-mode-badge">AI-powered · Claude</p></div>
+      <span class="pink-badge">AI</span>
+    </div>
+  </div>
+  <div class="chips">
+    <span class="chip" onclick="chipSend('Where is my money right now?')">Where's my money?</span>
+    <span class="chip" onclick="chipSend('Analyze my spending patterns')">Spending patterns</span>
+    <span class="chip" onclick="chipSend('Am I on track for MacBook?')">MacBook goal</span>
+    <span class="chip" onclick="chipSend('Worry about my credit card bill?')">CC bill</span>
+    <span class="chip" onclick="chipSend('Give me a monthly review for May 2026')">Monthly review</span>
+    <span class="chip" onclick="chipSend('How much to save monthly for my goals?')">Goal planning</span>
+    <span class="chip" onclick="chipSend('What are my biggest spending leaks?')">Spending leaks</span>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="msg-row bot">
+      <div class="msg-av bot-av">W</div>
+      <div class="bubble">Hi Raji! I'm your Wealth Brain CFO. I have your full financial picture — accounts, goals, check-ins, everything. Ask me anything or use the chips above. ✨</div>
+    </div>
+  </div>
+  <div class="chat-input-bar">
+    <input type="text" id="chat-input" placeholder="Ask anything about your money..." onkeydown="if(event.key==='Enter')sendChat()"/>
+    <button class="send-btn" onclick="sendChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
 </div>
 
-<div class="nav">
-<button class="active" onclick="showScreen('dashboard',this)">Dashboard</button>
-<button onclick="showScreen('transactions',this)">Ledger</button>
-<button onclick="showScreen('checkin',this)">Check-in</button>
-<button onclick="showScreen('goals',this)">Goals</button>
-<button onclick="showScreen('chat',this)">AI</button>
+<!-- ══════════════════════════════ TAX ══ -->
+<div class="screen" id="screen-tax">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><h1>Tax basics</h1><p>FY 2025-26 · ITR-1 guide</p></div>
+      <span class="pink-badge">ITR-1</span>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="info-banner"><strong>Good news:</strong> Your salary (~₹30,000/yr) is far below the ₹3,00,000 exemption. You likely owe ₹0 tax — but still file by July 31, 2026!</div>
+
+    <div class="card">
+      <div class="tax-section-title">Your FY 2025-26 profile</div>
+      <div class="tax-row"><span class="tax-lbl">Age</span><span class="tax-val">19 (turning 20, Sep 24)</span></div>
+      <div class="tax-row"><span class="tax-lbl">Resident status</span><span class="tax-val">Ordinary Resident, India</span></div>
+      <div class="tax-row"><span class="tax-lbl">Income source</span><span class="tax-val">Salary + bank interest</span></div>
+      <div class="tax-row"><span class="tax-lbl">Approx annual income</span><span class="tax-val">~₹30,000</span></div>
+      <div class="tax-row"><span class="tax-lbl">Basic exemption (new regime)</span><span class="tax-val ok">₹3,00,000</span></div>
+      <div class="tax-row"><span class="tax-lbl">Tax owed?</span><span class="tax-val ok">Likely ₹0 ✓</span></div>
+      <div class="tax-row"><span class="tax-lbl">Filing deadline</span><span class="tax-val warn">July 31, 2026</span></div>
+      <div class="tax-row"><span class="tax-lbl">Form</span><span class="tax-val">ITR-1 (Sahaj)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">Step-by-step: How to file ITR-1</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.9;">
+        <p>1. Go to <strong style="color:var(--p500)">incometax.gov.in</strong> → Login with PAN</p>
+        <p>2. e-File → Income Tax Returns → File ITR → AY 2026-27</p>
+        <p>3. Select ITR-1 (Sahaj) → your info auto-fills from PAN</p>
+        <p>4. Enter salary from <strong>Form 16</strong> (ask Adhithya Holidays)</p>
+        <p>5. Enter bank interest from all 3 bank statements</p>
+        <p>6. Add SIP/80C deductions if any</p>
+        <p>7. System computes tax → verify with Aadhaar OTP</p>
+        <p>8. Submit → save acknowledgement number</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">Documents to collect</div>
+      <div class="tax-row"><span class="tax-lbl">Form 16</span><span class="tax-val">From Adhithya Holidays — ask now</span></div>
+      <div class="tax-row"><span class="tax-lbl">Bank statements</span><span class="tax-val">ICICI, UBI, Slice (full year)</span></div>
+      <div class="tax-row"><span class="tax-lbl">PAN</span><span class="tax-val">Required</span></div>
+      <div class="tax-row"><span class="tax-lbl">Aadhaar</span><span class="tax-val">Must be PAN-linked</span></div>
+      <div class="tax-row"><span class="tax-lbl">SIP statement</span><span class="tax-val">For 80C deduction (if ELSS)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">Section 80C — reduce taxable income</div>
+      <div class="info-banner" style="margin-bottom:0">When income exceeds ₹3L, invest up to <strong>₹1.5L/year</strong> in: ELSS SIP (your SIP counts!), PPF (₹500 min/year), life insurance, NSC. Each ₹1 invested = ₹1 off taxable income.</div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">SIP taxation basics</div>
+      <div class="tax-row"><span class="tax-lbl">Equity SIP (held &lt;1yr)</span><span class="tax-val warn">STCG: 20% on gains</span></div>
+      <div class="tax-row"><span class="tax-lbl">Equity SIP (held &gt;1yr)</span><span class="tax-val">LTCG: 12.5% above ₹1.25L gains</span></div>
+      <div class="tax-row"><span class="tax-lbl">ELSS SIP</span><span class="tax-val ok">3yr lock-in, 80C benefit</span></div>
+      <div class="tax-row"><span class="tax-lbl">Debt SIP</span><span class="tax-val">Taxed at slab rate</span></div>
+      <div class="tax-row"><span class="tax-lbl">Your SIP now</span><span class="tax-val ok">Gains likely ₹0 tax (too small)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">Capital gains basics</div>
+      <div class="tax-row"><span class="tax-lbl">STCG (Short-term)</span><span class="tax-val">Held &lt;1 yr · 20% for equity</span></div>
+      <div class="tax-row"><span class="tax-lbl">LTCG (Long-term)</span><span class="tax-val">Held &gt;1 yr · 12.5% above ₹1.25L</span></div>
+      <div class="tax-row"><span class="tax-lbl">FD interest</span><span class="tax-val warn">Added to income, taxed at slab</span></div>
+      <div class="tax-row"><span class="tax-lbl">Savings account interest</span><span class="tax-val">₹10,000 exempt (80TTA)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">PPF basics (future planning)</div>
+      <div class="tax-row"><span class="tax-lbl">Lock-in period</span><span class="tax-val">15 years</span></div>
+      <div class="tax-row"><span class="tax-lbl">Interest rate</span><span class="tax-val ok">~7.1% p.a. (tax-free)</span></div>
+      <div class="tax-row"><span class="tax-lbl">Minimum/year</span><span class="tax-val">₹500</span></div>
+      <div class="tax-row"><span class="tax-lbl">Maximum/year</span><span class="tax-val">₹1,50,000</span></div>
+      <div class="tax-row"><span class="tax-lbl">Tax benefit</span><span class="tax-val ok">EEE — triple exempt</span></div>
+    </div>
+
+    <div class="card">
+      <div class="tax-section-title">Financial year vs assessment year</div>
+      <div class="info-banner" style="margin-bottom:0">
+        <strong>Financial Year (FY)</strong> = when you earn (Apr–Mar). <strong>Assessment Year (AY)</strong> = when you file taxes for that FY. FY 2025-26 → you file in AY 2026-27 (by July 31, 2026).
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="switchScreen('chat');chipSend('Walk me through filing ITR-1 for FY 2025-26 step by step for my income from Adhithya Holidays and bank interest.')">Ask CFO to walk me through filing ↗</button>
+    <div style="height:14px"></div>
+  </div>
 </div>
 
+</div><!-- end #app -->
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- BALANCE MODAL -->
+<div class="modal-overlay" id="modal-bal" onclick="if(event.target===this)closeModal('modal-bal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-bal-title">Update balance</div>
+    <div class="input-group">
+      <label class="input-label">Current balance (₹)</label>
+      <input type="number" id="modal-bal-input" placeholder="Enter amount"/>
+    </div>
+    <div id="modal-cc-note" style="display:none" class="info-banner" style="font-size:12px">Enter total outstanding as positive number.</div>
+    <button class="btn-primary" onclick="saveBalance()">Save balance</button>
+  </div>
+</div>
+
+<!-- FULL UPDATE MODAL -->
+<div class="modal-overlay" id="modal-update" onclick="if(event.target===this)closeModal('modal-update')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Update all balances</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Check your apps and enter current numbers.</p>
+    <div class="input-group"><label class="input-label">ICICI balance (₹)</label><input type="number" id="u-icici" placeholder="Current balance"/></div>
+    <div class="input-group"><label class="input-label">UBI balance (₹)</label><input type="number" id="u-ubi" placeholder="Current balance"/></div>
+    <div class="input-group"><label class="input-label">Slice balance (₹)</label><input type="number" id="u-slice" placeholder="Current balance"/></div>
+    <div class="input-group"><label class="input-label">Credit card outstanding (₹)</label><input type="number" id="u-cc" placeholder="Amount owed"/></div>
+    <div class="input-group"><label class="input-label">MacBook savings total (₹)</label><input type="number" id="u-macbook" placeholder="Include FDs"/></div>
+    <div class="input-group"><label class="input-label">Safety net total (₹)</label><input type="number" id="u-safety" placeholder="Current total"/></div>
+    <div class="input-group"><label class="input-label">SIP total invested (₹)</label><input type="number" id="u-sip" placeholder="e.g. 7000"/></div>
+    <div class="input-group"><label class="input-label">Adhi's ₹1,000 — returned?</label><select id="u-lend"><option value="">Select...</option><option value="yes">Yes</option><option value="no">Still pending</option></select></div>
+    <button class="btn-primary" onclick="saveAllBalances()">Save everything ✓</button>
+  </div>
+</div>
+
+<!-- SIP MODAL -->
+<div class="modal-overlay" id="modal-sip" onclick="if(event.target===this)closeModal('modal-sip')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">SIP details</div>
+    <div class="input-group"><label class="input-label">Monthly SIP amount (₹)</label><input type="number" id="sip-monthly-input" placeholder="e.g. 1000"/></div>
+    <div class="input-group"><label class="input-label">Total invested so far (₹)</label><input type="number" id="sip-total-input" placeholder="e.g. 7000"/></div>
+    <div class="input-group"><label class="input-label">Fund name / type</label><input type="text" id="sip-fund-input" placeholder="e.g. Nifty 50 Index Fund"/></div>
+    <div class="input-group"><label class="input-label">Duration target (years)</label><input type="number" id="sip-years-input" placeholder="e.g. 10"/></div>
+    <div class="input-group"><label class="input-label">Notes</label><input type="text" id="sip-notes-input" placeholder="e.g. auto-debit 5th of month"/></div>
+    <button class="btn-primary" onclick="saveSIP()">Save SIP details ✓</button>
+  </div>
+</div>
+
+<!-- ADD GOAL MODAL -->
+<div class="modal-overlay" id="modal-add-goal" onclick="if(event.target===this)closeModal('modal-add-goal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="goal-modal-title">Add a dream jar goal</div>
+    <input type="hidden" id="ag-edit-id"/>
+    <div class="input-group"><label class="input-label">Goal name</label><input type="text" id="ag-name" placeholder="e.g. Apple Pencil, Perfume, Trip to Goa"/></div>
+    <div class="input-group"><label class="input-label">Target amount (₹)</label><input type="number" id="ag-target" placeholder="e.g. 7900"/></div>
+    <div class="input-group"><label class="input-label">Already saved (₹)</label><input type="number" id="ag-saved" placeholder="0 if starting fresh"/></div>
+    <div class="input-group"><label class="input-label">Short-term or long-term?</label>
+      <select id="ag-type" onchange="toggleDeadline()">
+        <option value="">Select...</option>
+        <option value="short">Short-term — I have a deadline</option>
+        <option value="long">Long-term — no fixed date</option>
+      </select>
+    </div>
+    <div id="ag-deadline-block" style="display:none">
+      <div class="input-group"><label class="input-label">Deadline date</label><input type="date" id="ag-deadline"/></div>
+    </div>
+    <div class="input-group"><label class="input-label">Notes (optional)</label><input type="text" id="ag-notes" placeholder="e.g. USB-C version, from Amazon"/></div>
+    <button class="btn-primary" onclick="saveGoal()">Save goal ✓</button>
+  </div>
+</div>
+
+<!-- GOAL ACHIEVE MODAL -->
+<div class="modal-overlay" id="modal-goal-achieve">
+  <div class="modal-sheet" style="text-align:center">
+    <div class="modal-handle"></div>
+    <div style="font-size:36px;margin-bottom:8px" id="achieve-emoji">🎉</div>
+    <div class="modal-title" id="achieve-title" style="text-align:center">Deadline check!</div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.6" id="achieve-body"></p>
+    <button class="btn-primary" onclick="markGoalDone()">Yes, I got it! ✓</button>
+    <button class="btn-pink-outline" onclick="extendGoal()">Not yet — extend deadline</button>
+  </div>
+</div>
+
+<!-- EXTEND DEADLINE -->
+<div class="modal-overlay" id="modal-extend" onclick="if(event.target===this)closeModal('modal-extend')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Extend deadline</div>
+    <div class="input-group"><label class="input-label">New deadline</label><input type="date" id="extend-date"/></div>
+    <div class="input-group"><label class="input-label">Updated savings (₹)</label><input type="number" id="extend-saved" placeholder="Current amount saved"/></div>
+    <button class="btn-primary" onclick="saveExtension()">Save new deadline ✓</button>
+  </div>
+</div>
+
+<!-- ADD TRANSACTION MODAL -->
+<div class="modal-overlay" id="modal-add-tx" onclick="if(event.target===this)closeModal('modal-add-tx')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="tx-modal-title">Add transaction</div>
+    <input type="hidden" id="tx-edit-id"/>
+    <div class="input-group"><label class="input-label">Date</label><input type="date" id="tx-date"/></div>
+    <div class="input-group"><label class="input-label">Account</label>
+      <select id="tx-account">
+        <option value="icici">ICICI</option><option value="ubi">UBI</option><option value="slice">Slice</option>
+        <option value="cc">Credit Card</option><option value="sip">SIP</option><option value="safety">Safety Net</option>
+      </select>
+    </div>
+    <div class="input-group"><label class="input-label">Type</label>
+      <select id="tx-type"><option value="debit">Debit (spent)</option><option value="credit">Credit (received)</option></select>
+    </div>
+    <div class="input-group"><label class="input-label">Amount (₹)</label><input type="number" id="tx-amount" placeholder="e.g. 140"/></div>
+    <div class="input-group"><label class="input-label">Description</label><input type="text" id="tx-desc" placeholder="e.g. Auto fare morning"/></div>
+    <div class="input-group"><label class="input-label">Category</label>
+      <select id="tx-category">
+        <option value="transport">Transport</option><option value="food">Food</option><option value="grocery">Grocery</option>
+        <option value="subscription">Subscription</option><option value="shopping">Shopping</option><option value="health">Health</option>
+        <option value="salary">Salary</option><option value="transfer">Transfer</option><option value="savings">Savings</option>
+        <option value="investment">Investment</option><option value="fees">Fees/Bills</option><option value="other">Other</option>
+      </select>
+    </div>
+    <div class="input-group"><label class="input-label">Notes</label><input type="text" id="tx-notes" placeholder="Optional"/></div>
+    <button class="btn-primary" onclick="saveTx()">Save transaction ✓</button>
+  </div>
 </div>
 
 <script>
-const STORAGE_KEY='wealth_brain_v2';
-
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+const STORAGE_KEY='raji_wb_v4';
 let state={
-transactions:[],
-checkins:[],
-goals:[],
-sip:{monthly:1000},
-dark:false,
-chat:[]
+  balances:{icici:null,ubi:null,slice:null,cc:null},
+  sip:{monthly:1000,total:null,fund:'',years:10,notes:'',active:true},
+  safetyNet:null,
+  dreamJar:[
+    {id:'macbook',name:'MacBook',target:79999,saved:0,type:'long',deadline:null,notes:'Day-by-day FD plan',done:false,createdAt:'2026-03-04'},
+    {id:'pencil',name:'Apple Pencil',target:7900,saved:0,type:'long',deadline:null,notes:'USB-C version',done:false,createdAt:'2026-01-01'}
+  ],
+  transactions:[],
+  checkins:{},
+  chatHistory:[],
+  lendAdhi:'pending',
+  darkMode:false,
+  achieveCheckDone:{}
 };
 
-function save(){
-localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+function loadState(){
+  try{const s=localStorage.getItem(STORAGE_KEY);if(s){const p=JSON.parse(s);state=Object.assign({},state,p);if(!state.dreamJar||!state.dreamJar.length)state.dreamJar=[{id:'macbook',name:'MacBook',target:79999,saved:0,type:'long',deadline:null,notes:'',done:false,createdAt:'2026-03-04'},{id:'pencil',name:'Apple Pencil',target:7900,saved:0,type:'long',deadline:null,notes:'',done:false,createdAt:'2026-01-01'}];if(!state.transactions)state.transactions=[];if(!state.achieveCheckDone)state.achieveCheckDone={};}}catch(e){}
+}
+function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}}
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function fmt(n){if(n===null||n===undefined)return null;return'₹'+Math.abs(Number(n)).toLocaleString('en-IN');}
+function fmtN(n){return Number(n||0).toLocaleString('en-IN');}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayFull(){return new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+function isSunday(){return new Date().getDay()===0;}
+function uid(){return'tx_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+function parseMoney(str){if(!str||str.toLowerCase().trim()==='nil')return 0;const m=str.match(/[₹]?(\d+(?:\.\d+)?)/);return m?parseFloat(m[1]):0;}
+function accColor(acc){return{icici:'var(--p400)',ubi:'var(--green)',slice:'var(--amber)',cc:'var(--red)',sip:'var(--p300)',safety:'var(--p600)'}[acc]||'var(--muted)';}
+function accName(acc){return{icici:'ICICI',ubi:'UBI',slice:'Slice',cc:'Credit Card',sip:'SIP',safety:'Safety Net'}[acc]||acc;}
+
+// ════════════════════════════════════════════════════════
+// DARK MODE
+// ════════════════════════════════════════════════════════
+function toggleDark(){
+  state.darkMode=!state.darkMode;
+  document.body.classList.toggle('dark',state.darkMode);
+  document.getElementById('dark-btn').textContent=state.darkMode?'☀️':'🌙';
+  saveState();
+}
+function applyDark(){
+  if(state.darkMode){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='☀️';}
 }
 
-function load(){
-const data=localStorage.getItem(STORAGE_KEY);
-if(data){
-state=JSON.parse(data);
-}
-if(state.dark){document.body.classList.add('dark')}
-renderAll();
-}
-
-function showScreen(id,btn){
-document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-btn.classList.add('active');
+// ════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════
+function switchScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  if(id==='dashboard')renderDashboard();
+  if(id==='ledger')renderLedger();
+  if(id==='catchup')renderCatchup();
+  if(id==='checkin')renderCheckin();
 }
 
-function toggleDarkMode(){
-state.dark=!state.dark;
-document.body.classList.toggle('dark');
-save();
-}
-
-function quickAdd(){
-const text=document.getElementById('quickEntry').value.trim();
-if(!text)return;
-
-state.transactions.push({
-id:'txn_'+Date.now(),
-date:new Date().toLocaleDateString(),
-description:text,
-category:'General'
-});
-
-save();
-renderTransactions();
-renderDashboard();
-document.getElementById('quickEntry').value='';
-}
-
-function saveCheckin(){
-const text=document.getElementById('checkinText').value.trim();
-if(!text)return;
-
-const entry={
-date:new Date().toLocaleDateString(),
-text
-};
-
-state.checkins.push(entry);
-
-state.transactions.push({
-id:'txn_'+Date.now(),
-date:entry.date,
-description:text,
-category:'Check-in'
-});
-
-save();
-renderCheckins();
-renderTransactions();
-renderDashboard();
-document.getElementById('checkinText').value='';
-}
-
-function renderCheckins(){
-const box=document.getElementById('checkinHistory');
-box.innerHTML='';
-
-state.checkins.slice().reverse().forEach(c=>{
-box.innerHTML+=`<div class="card"><div class="small">${c.date}</div><div>${c.text}</div></div>`;
-});
-}
-
-function renderTransactions(){
-const q=document.getElementById('search')?.value?.toLowerCase()||'';
-const box=document.getElementById('transactionList');
-box.innerHTML='';
-
-let txns=[...state.transactions].reverse();
-if(q){
-txns=txns.filter(t=>t.description.toLowerCase().includes(q));
-}
-
-if(!txns.length){
-box.innerHTML='<div class="card">No transactions yet</div>';
-return;
-}
-
- txns.forEach(t=>{
-box.innerHTML+=`
-<div class="card">
-<div class="transaction">
-<div class="small">${t.date}</div>
-<div>${t.description}</div>
-<div style="margin-top:10px;display:flex;gap:8px">
-<button onclick="editTxn('${t.id}')">Edit</button>
-<button onclick="deleteTxn('${t.id}')">Delete</button>
-</div>
-</div>
-</div>`;
-});
-}
-
-function editTxn(id){
-const txn=state.transactions.find(t=>t.id===id);
-if(!txn)return;
-
-const updated=prompt('Edit transaction',txn.description);
-if(updated!==null){
-txn.description=updated;
-save();
-renderTransactions();
-}
-}
-
-function deleteTxn(id){
-state.transactions=state.transactions.filter(t=>t.id!==id);
-save();
-renderTransactions();
-renderDashboard();
-}
-
-function addGoal(){
-const name=document.getElementById('goalName').value;
-const target=Number(document.getElementById('goalTarget').value);
-const saved=Number(document.getElementById('goalSaved').value);
-
-if(!name||!target)return;
-
-state.goals.push({
-id:'goal_'+Date.now(),
-name,
-target,
-saved
-});
-
-save();
-renderGoals();
-renderDashboard();
-
-['goalName','goalTarget','goalSaved'].forEach(id=>document.getElementById(id).value='');
-}
-
-function renderGoals(){
-const box=document.getElementById('goalList');
-box.innerHTML='';
-
-state.goals.forEach(g=>{
-const pct=Math.min(100,Math.round((g.saved/g.target)*100));
-
-box.innerHTML+=`
-<div class="card goal">
-<div style="display:flex;justify-content:space-between">
-<strong>${g.name}</strong>
-<div>
-<button onclick="editGoal('${g.id}')">Edit</button>
-</div>
-</div>
-<div class="small">₹${g.saved} / ₹${g.target}</div>
-<div class="progress"><div style="width:${pct}%"></div></div>
-</div>`;
-});
-}
-
-function editGoal(id){
-const g=state.goals.find(x=>x.id===id);
-if(!g)return;
-
-const target=prompt('Update target amount',g.target);
-const saved=prompt('Update saved amount',g.saved);
-
-if(target!==null)g.target=Number(target);
-if(saved!==null)g.saved=Number(saved);
-
-save();
-renderGoals();
-}
-
+// ════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════
 function renderDashboard(){
-document.getElementById('totalTransactions').textContent=state.transactions.length;
-document.getElementById('goalCount').textContent=state.goals.length;
-document.getElementById('sipAmount').textContent='₹'+state.sip.monthly;
+  document.getElementById('dash-date').textContent=todayFull();
+  const b=state.balances;
+  function setAcc(id,val,neg){
+    const el=document.getElementById('bal-'+id);
+    if(val===null){el.className='account-bal unset';el.textContent='—';}
+    else{el.className='account-bal'+(neg?' neg':'');el.textContent=neg?'−'+fmt(val):fmt(val);}
+  }
+  setAcc('icici',b.icici,false);setAcc('ubi',b.ubi,false);setAcc('slice',b.slice,false);setAcc('cc',b.cc,true);
+  const liquid=(b.icici||0)+(b.ubi||0)+(b.slice||0);
+  document.getElementById('total-liquid').textContent=liquid>0?fmt(liquid):'—';
+  document.getElementById('total-cc').textContent=b.cc!==null?fmt(b.cc):'—';
+  const mac=state.dreamJar.find(g=>g.id==='macbook');
+  document.getElementById('dash-macbook').textContent=mac&&mac.saved>0?fmt(mac.saved):'—';
+  document.getElementById('dash-safety').textContent=state.safetyNet>0?fmt(state.safetyNet):'—';
+  // SIP
+  const sip=state.sip;
+  document.getElementById('d-sip-monthly').textContent='₹'+fmtN(sip.monthly)+'/month';
+  document.getElementById('d-sip-total').textContent=sip.total?fmt(sip.total):'—';
+  document.getElementById('d-sip-fund').textContent=sip.fund||'—';
+  if(sip.total&&sip.monthly&&sip.years){
+    const r=0.12/12;const n=sip.years*12;const fv=sip.monthly*((Math.pow(1+r,n)-1)/r)*(1+r);
+    document.getElementById('d-sip-proj').textContent='~'+fmt(Math.round(fv))+' (12% est.)';
+  } else document.getElementById('d-sip-proj').textContent='—';
+  renderGoals();renderWeekAlert();renderSpendingSnapshot();
 }
+
+function renderSpendingSnapshot(){
+  const el=document.getElementById('spending-snapshot');
+  const txs=state.transactions.filter(t=>t.type==='debit');
+  if(!txs.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">Log check-ins to see your spending breakdown</div>';return;}
+  const cats={};txs.forEach(t=>{cats[t.category]=(cats[t.category]||0)+Number(t.amount);});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  let html='';
+  sorted.forEach(([cat,amt])=>{
+    const pct=total>0?Math.round(amt/total*100):0;
+    html+=`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600;color:var(--text);text-transform:capitalize">${cat}</span>
+        <span style="color:var(--muted)">₹${fmtN(Math.round(amt))} · ${pct}%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function renderWeekAlert(){
+  const box=document.getElementById('week-alert-box');
+  if(!isSunday()){box.innerHTML='';return;}
+  const d=new Date();const missing=[];
+  for(let i=6;i>=0;i--){const dd=new Date(d);dd.setDate(d.getDate()-i);const key=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');if(!state.checkins[key])missing.push(dd.toLocaleDateString('en-IN',{day:'numeric',month:'short'}));}
+  if(missing.length)box.innerHTML=`<div class="week-alert"><div class="wa-title">⚠️ Sunday — ${missing.length} day(s) missing this week</div><div class="wa-sub">${missing.join(', ')} — catch up before the week closes!</div></div>`;
+  else box.innerHTML='';
+}
+
+// ════════════════════════════════════════════════════════
+// DREAM JAR
+// ════════════════════════════════════════════════════════
+function renderGoals(){
+  const container=document.getElementById('goals-container');
+  const active=state.dreamJar.filter(g=>!g.done);
+  const done=state.dreamJar.filter(g=>g.done);
+  if(!state.dreamJar.length){container.innerHTML='<div class="card" style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No goals yet — tap + Goal to start!</div>';return;}
+  let html='';
+  if(active.length){
+    html+='<div class="card" style="padding:12px 14px;">';
+    active.forEach((g,i)=>{
+      const pct=g.target>0?Math.min(100,Math.round(g.saved/g.target*100)):0;
+      const isShort=g.type==='short';
+      let deadlineBadge='';
+      if(isShort&&g.deadline){
+        const dl=new Date(g.deadline);const now=new Date();const diff=Math.ceil((dl-now)/(1000*60*60*24));
+        if(diff<0)deadlineBadge=`<span class="red-badge" style="font-size:10px">⚠️ overdue</span>`;
+        else if(diff<=7)deadlineBadge=`<span class="amber-badge" style="font-size:10px">⏰ ${diff}d left</span>`;
+        else deadlineBadge=`<span class="pink-badge" style="font-size:10px">${dl.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>`;
+      }else if(isShort)deadlineBadge='<span class="amber-badge" style="font-size:10px">long-term</span>';
+      html+=`<div style="padding-bottom:12px;${i<active.length-1?'margin-bottom:4px;border-bottom:1px solid var(--border2)':''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${g.name}</span>
+          <span style="display:flex;gap:5px;align-items:center">${deadlineBadge}
+            <button class="tx-action-btn" onclick="openEditGoal('${g.id}')">✏️</button>
+            <button class="tx-action-btn" onclick="deleteGoal('${g.id}')">🗑</button>
+          </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:11px;color:var(--muted)">₹${fmtN(g.saved)} / ₹${fmtN(g.target)}</span>
+          <span style="font-size:11px;color:var(--p400);font-weight:700">${pct}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill${pct>=100?' green':''}" style="width:${pct}%"></div></div>
+        ${g.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${g.notes}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  }
+  if(done.length){
+    html+=`<div class="section-title">Achieved 🎉</div><div class="card" style="padding:12px 14px;">`;
+    done.forEach(g=>{html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border2)"><span style="font-size:13px;color:var(--muted);text-decoration:line-through">${g.name}</span><span class="green-badge">✓ done</span></div>`;});
+    html+='</div>';
+  }
+  container.innerHTML=html;
+  checkDeadlines();
+}
+
+function toggleDeadline(){
+  document.getElementById('ag-deadline-block').style.display=document.getElementById('ag-type').value==='short'?'block':'none';
+}
+
+function openAddGoalModal(){
+  document.getElementById('goal-modal-title').textContent='Add a dream jar goal';
+  document.getElementById('ag-edit-id').value='';
+  ['ag-name','ag-target','ag-saved','ag-deadline','ag-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ag-type').value='';
+  document.getElementById('ag-deadline-block').style.display='none';
+  document.getElementById('modal-add-goal').classList.add('open');
+}
+
+function openEditGoal(id){
+  const g=state.dreamJar.find(x=>x.id===id);if(!g)return;
+  document.getElementById('goal-modal-title').textContent='Edit goal';
+  document.getElementById('ag-edit-id').value=id;
+  document.getElementById('ag-name').value=g.name;
+  document.getElementById('ag-target').value=g.target;
+  document.getElementById('ag-saved').value=g.saved;
+  document.getElementById('ag-type').value=g.type||'long';
+  document.getElementById('ag-deadline').value=g.deadline||'';
+  document.getElementById('ag-notes').value=g.notes||'';
+  document.getElementById('ag-deadline-block').style.display=g.type==='short'?'block':'none';
+  document.getElementById('modal-add-goal').classList.add('open');
+}
+
+function saveGoal(){
+  const editId=document.getElementById('ag-edit-id').value;
+  const name=document.getElementById('ag-name').value.trim();
+  const target=parseFloat(document.getElementById('ag-target').value);
+  const saved=parseFloat(document.getElementById('ag-saved').value)||0;
+  const type=document.getElementById('ag-type').value;
+  const deadline=document.getElementById('ag-deadline').value||null;
+  const notes=document.getElementById('ag-notes').value.trim();
+  if(!name||isNaN(target)||!type){alert('Fill in goal name, target amount, and type.');return;}
+  if(type==='short'&&!deadline){alert('Short-term goals need a deadline date.');return;}
+  if(editId){
+    const g=state.dreamJar.find(x=>x.id===editId);
+    if(g)Object.assign(g,{name,target,saved,type,deadline,notes});
+  }else{
+    state.dreamJar.push({id:'goal_'+Date.now(),name,target,saved,type,deadline,notes,done:false,createdAt:todayStr()});
+  }
+  saveState();closeModal('modal-add-goal');renderGoals();renderDashboard();
+}
+
+function deleteGoal(id){
+  const g=state.dreamJar.find(x=>x.id===id);if(!g)return;
+  if(!confirm('Remove "'+g.name+'" from Dream Jar?'))return;
+  state.dreamJar=state.dreamJar.filter(x=>x.id!==id);saveState();renderGoals();renderDashboard();
+}
+
+let currentAchieveId='';
+function checkDeadlines(){
+  const today=new Date();today.setHours(0,0,0,0);
+  state.dreamJar.forEach(g=>{
+    if(g.done||!g.deadline||state.achieveCheckDone[g.id])return;
+    const dl=new Date(g.deadline);dl.setHours(0,0,0,0);
+    if(dl<=today){state.achieveCheckDone[g.id]=true;saveState();setTimeout(()=>showAchieveModal(g.id),500);}
+  });
+}
+function showAchieveModal(id){
+  const g=state.dreamJar.find(x=>x.id===id);if(!g)return;
+  currentAchieveId=id;
+  document.getElementById('achieve-emoji').textContent=g.saved>=g.target?'🎉':'⏰';
+  document.getElementById('achieve-title').textContent='Deadline reached — '+g.name;
+  document.getElementById('achieve-body').textContent=g.saved>=g.target?`You've saved ₹${fmtN(g.saved)} for ${g.name}! Did you buy it?`:`Deadline passed. You've saved ₹${fmtN(g.saved)} of ₹${fmtN(g.target)}. Did you get it?`;
+  document.getElementById('modal-goal-achieve').classList.add('open');
+}
+function markGoalDone(){const g=state.dreamJar.find(x=>x.id===currentAchieveId);if(g){g.done=true;g.doneDate=todayStr();}saveState();closeModal('modal-goal-achieve');renderGoals();}
+function extendGoal(){closeModal('modal-goal-achieve');const g=state.dreamJar.find(x=>x.id===currentAchieveId);if(g){document.getElementById('extend-saved').value=g.saved||'';document.getElementById('extend-date').value='';}document.getElementById('modal-extend').classList.add('open');}
+function saveExtension(){
+  const g=state.dreamJar.find(x=>x.id===currentAchieveId);const d=document.getElementById('extend-date').value;const s=parseFloat(document.getElementById('extend-saved').value);
+  if(!d){alert('Pick a new deadline.');return;}
+  if(g){g.deadline=d;if(!isNaN(s))g.saved=s;delete state.achieveCheckDone[g.id];}
+  saveState();closeModal('modal-extend');renderGoals();
+}
+
+// ════════════════════════════════════════════════════════
+// BALANCE MODALS
+// ════════════════════════════════════════════════════════
+let currentBalKey='';
+function openBalModal(key){
+  currentBalKey=key;
+  const names={icici:'ICICI balance',ubi:'UBI balance',slice:'Slice balance',cc:'CC outstanding'};
+  document.getElementById('modal-bal-title').textContent='Update '+names[key];
+  document.getElementById('modal-cc-note').style.display=key==='cc'?'block':'none';
+  document.getElementById('modal-bal-input').value=state.balances[key]||'';
+  document.getElementById('modal-bal').classList.add('open');
+}
+function saveBalance(){
+  const v=parseFloat(document.getElementById('modal-bal-input').value);
+  if(!isNaN(v)){state.balances[currentBalKey]=v;saveState();renderDashboard();}
+  closeModal('modal-bal');
+}
+function openUpdateModal(){
+  const b=state.balances;const mac=state.dreamJar.find(g=>g.id==='macbook');
+  if(b.icici)document.getElementById('u-icici').value=b.icici;
+  if(b.ubi)document.getElementById('u-ubi').value=b.ubi;
+  if(b.slice)document.getElementById('u-slice').value=b.slice;
+  if(b.cc)document.getElementById('u-cc').value=b.cc;
+  if(mac&&mac.saved)document.getElementById('u-macbook').value=mac.saved;
+  if(state.safetyNet)document.getElementById('u-safety').value=state.safetyNet;
+  if(state.sip.total)document.getElementById('u-sip').value=state.sip.total;
+  document.getElementById('modal-update').classList.add('open');
+}
+function saveAllBalances(){
+  function n(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;}
+  if(n('u-icici')!==null)state.balances.icici=n('u-icici');
+  if(n('u-ubi')!==null)state.balances.ubi=n('u-ubi');
+  if(n('u-slice')!==null)state.balances.slice=n('u-slice');
+  if(n('u-cc')!==null)state.balances.cc=n('u-cc');
+  if(n('u-macbook')!==null){const mac=state.dreamJar.find(g=>g.id==='macbook');if(mac)mac.saved=n('u-macbook');}
+  if(n('u-safety')!==null)state.safetyNet=n('u-safety');
+  if(n('u-sip')!==null)state.sip.total=n('u-sip');
+  const lend=document.getElementById('u-lend').value;if(lend)state.lendAdhi=lend;
+  saveState();renderDashboard();closeModal('modal-update');
+}
+
+// ════════════════════════════════════════════════════════
+// SIP MODAL
+// ════════════════════════════════════════════════════════
+function openSIPModal(){
+  const sip=state.sip;
+  document.getElementById('sip-monthly-input').value=sip.monthly||'';
+  document.getElementById('sip-total-input').value=sip.total||'';
+  document.getElementById('sip-fund-input').value=sip.fund||'';
+  document.getElementById('sip-years-input').value=sip.years||10;
+  document.getElementById('sip-notes-input').value=sip.notes||'';
+  document.getElementById('modal-sip').classList.add('open');
+}
+function saveSIP(){
+  function n(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;}
+  if(n('sip-monthly-input'))state.sip.monthly=n('sip-monthly-input');
+  if(n('sip-total-input'))state.sip.total=n('sip-total-input');
+  state.sip.fund=document.getElementById('sip-fund-input').value;
+  if(n('sip-years-input'))state.sip.years=n('sip-years-input');
+  state.sip.notes=document.getElementById('sip-notes-input').value;
+  saveState();closeModal('modal-sip');renderDashboard();
+}
+
+// ════════════════════════════════════════════════════════
+// TRANSACTIONS / LEDGER
+// ════════════════════════════════════════════════════════
+let ledgerFilter='all';
+function setLedgerFilter(acc,el){
+  ledgerFilter=acc;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderLedger();
+}
+
+function renderLedger(){
+  let txs=[...state.transactions].sort((a,b)=>b.date.localeCompare(a.date));
+  if(ledgerFilter!=='all')txs=txs.filter(t=>t.account===ledgerFilter);
+  const totalIn=txs.filter(t=>t.type==='credit').reduce((s,t)=>s+Number(t.amount),0);
+  const totalOut=txs.filter(t=>t.type==='debit').reduce((s,t)=>s+Number(t.amount),0);
+  document.getElementById('ls-count').textContent=txs.length;
+  document.getElementById('ls-in').textContent='₹'+fmtN(Math.round(totalIn));
+  document.getElementById('ls-out').textContent='₹'+fmtN(Math.round(totalOut));
+  const tbody=document.getElementById('ledger-body');
+  if(!txs.length){tbody.innerHTML='<tr><td colspan="6" class="ledger-empty">No transactions'+( ledgerFilter!=='all'?' for '+accName(ledgerFilter):'')+'. Submit a check-in or add manually.</td></tr>';return;}
+  tbody.innerHTML=txs.map(t=>{
+    const d=new Date(t.date);const ds=d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    const isCredit=t.type==='credit';
+    return`<tr>
+      <td style="white-space:nowrap;color:var(--muted)">${ds}</td>
+      <td><span class="tx-acc-dot" style="background:${accColor(t.account)}"></span>${accName(t.account)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.desc||'—'}</td>
+      <td><span class="tx-cat">${t.category||'other'}</span></td>
+      <td class="${isCredit?'tx-credit':'tx-debit'}">${isCredit?'+':'−'}₹${fmtN(t.amount)}</td>
+      <td style="white-space:nowrap">
+        <button class="tx-action-btn" onclick="editTx('${t.id}')">✏️</button>
+        <button class="tx-action-btn" onclick="deleteTx('${t.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddTxModal(){
+  document.getElementById('tx-modal-title').textContent='Add transaction';
+  document.getElementById('tx-edit-id').value='';
+  document.getElementById('tx-date').value=todayStr();
+  document.getElementById('tx-account').value='icici';
+  document.getElementById('tx-type').value='debit';
+  document.getElementById('tx-amount').value='';
+  document.getElementById('tx-desc').value='';
+  document.getElementById('tx-category').value='other';
+  document.getElementById('tx-notes').value='';
+  document.getElementById('modal-add-tx').classList.add('open');
+}
+
+function editTx(id){
+  const t=state.transactions.find(x=>x.id===id);if(!t)return;
+  document.getElementById('tx-modal-title').textContent='Edit transaction';
+  document.getElementById('tx-edit-id').value=id;
+  document.getElementById('tx-date').value=t.date;
+  document.getElementById('tx-account').value=t.account;
+  document.getElementById('tx-type').value=t.type;
+  document.getElementById('tx-amount').value=t.amount;
+  document.getElementById('tx-desc').value=t.desc||'';
+  document.getElementById('tx-category').value=t.category||'other';
+  document.getElementById('tx-notes').value=t.notes||'';
+  document.getElementById('modal-add-tx').classList.add('open');
+}
+
+function saveTx(){
+  const editId=document.getElementById('tx-edit-id').value;
+  const tx={
+    id:editId||uid(),
+    date:document.getElementById('tx-date').value||todayStr(),
+    account:document.getElementById('tx-account').value,
+    type:document.getElementById('tx-type').value,
+    amount:parseFloat(document.getElementById('tx-amount').value)||0,
+    desc:document.getElementById('tx-desc').value.trim(),
+    category:document.getElementById('tx-category').value,
+    notes:document.getElementById('tx-notes').value.trim(),
+    source:'manual'
+  };
+  if(!tx.amount){alert('Enter an amount.');return;}
+  if(editId){const i=state.transactions.findIndex(x=>x.id===editId);if(i>-1)state.transactions[i]=tx;}
+  else state.transactions.push(tx);
+  saveState();closeModal('modal-add-tx');renderLedger();recalcBalancesFromLedger();renderDashboard();
+}
+
+function deleteTx(id){
+  if(!confirm('Delete this transaction?'))return;
+  state.transactions=state.transactions.filter(x=>x.id!==id);
+  saveState();renderLedger();recalcBalancesFromLedger();renderDashboard();
+}
+
+function recalcBalancesFromLedger(){
+  // Update MacBook/Safety from their transactions
+  const macTxs=state.transactions.filter(t=>t.account==='safety'||t.category==='savings');
+  const mac=state.dreamJar.find(g=>g.id==='macbook');
+  const sipTxs=state.transactions.filter(t=>t.account==='sip');
+  if(sipTxs.length&&!state.sip.total){
+    state.sip.total=sipTxs.reduce((s,t)=>s+(t.type==='debit'?Number(t.amount):0),0)||state.sip.total;
+  }
+}
+
+function addTxFromCheckin(date,account,desc,amount,category,type='debit'){
+  if(!amount||amount<=0)return;
+  state.transactions.push({id:uid(),date,account,type,amount,desc,category,notes:'',source:'checkin'});
+}
+
+// ════════════════════════════════════════════════════════
+// CHECK-IN
+// ════════════════════════════════════════════════════════
+function renderCheckin(){
+  document.getElementById('checkin-date').textContent=todayFull();
+  document.getElementById('checkin-streak').textContent=calcStreak()+' day streak';
+  renderRecentLog();
+}
+
+function calcStreak(){
+  let streak=0;const d=new Date();
+  for(let i=0;i<60;i++){const dd=new Date(d);dd.setDate(d.getDate()-i);const key=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');if(state.checkins[key])streak++;else if(i>0)break;}
+  return streak;
+}
+
+function parseCheckinLine(text,date,account){
+  if(!text||text.toLowerCase().trim()==='nil')return;
+  const parts=text.split(',').map(s=>s.trim()).filter(Boolean);
+  parts.forEach(part=>{
+    const amt=parseMoney(part);if(!amt)return;
+    const desc=part.replace(/[₹\d,\.]+/g,'').trim()||'Expense';
+    let cat='other';
+    if(/auto|cab|bus|metro|travel|ola|uber/i.test(desc))cat='transport';
+    else if(/coffee|chai|food|eat|restaurant|waffle|burger|pizza|zomato|swiggy|blinkit|zepto/i.test(desc))cat='food';
+    else if(/grocery|vegetables|instamart|blinkit|zepto/i.test(desc))cat='grocery';
+    else if(/netflix|apple|google|icloud|music|subscription/i.test(desc))cat='subscription';
+    else if(/nykaa|amazon|shopping|clothes|outfit/i.test(desc))cat='shopping';
+    else if(/salary|income|stipend|credited/i.test(desc))cat='salary';
+    addTxFromCheckin(date,account,desc,amt,cat,'debit');
+  });
+}
+
+function submitCheckin(){
+  const key=todayStr();
+  const fields=['ci-icici','ci-ubi','ci-slice','ci-cc','ci-macbook','ci-safety','ci-sip'];
+  const vals=fields.map(id=>document.getElementById(id).value);
+  if(vals.every(v=>!v||v.toLowerCase().trim()==='nil')){alert('Fill in at least one field. Write "nil" if nothing happened.');return;}
+
+  const entry={date:key,icici:vals[0],ubi:vals[1],slice:vals[2],cc:vals[3],macbook:vals[4],safety:vals[5],sip:vals[6],ts:new Date().toISOString()};
+  state.checkins[key]=entry;
+
+  // Parse into transactions
+  parseCheckinLine(vals[0],key,'icici');
+  parseCheckinLine(vals[1],key,'ubi');
+  parseCheckinLine(vals[2],key,'slice');
+  parseCheckinLine(vals[3],key,'cc');
+
+  // MacBook savings
+  const macSave=parseMoney(vals[4]);
+  if(macSave>0){const mac=state.dreamJar.find(g=>g.id==='macbook');if(mac)mac.saved=(mac.saved||0)+macSave;addTxFromCheckin(key,'icici','MacBook savings',macSave,'savings','debit');}
+
+  // Safety net
+  const safeSave=parseMoney(vals[5]);
+  if(safeSave>0){state.safetyNet=(state.safetyNet||0)+safeSave;addTxFromCheckin(key,'safety','Safety net deposit',safeSave,'savings','credit');}
+
+  // SIP
+  const sipAmt=parseMoney(vals[6]);
+  if(sipAmt>0){state.sip.total=(state.sip.total||0)+sipAmt;addTxFromCheckin(key,'sip','SIP deduction',sipAmt,'investment','debit');}
+
+  saveState();
+  fields.forEach(id=>document.getElementById(id).value='');
+  renderCheckin();renderDashboard();
+  alert('✓ Check-in saved and ledger updated!');
+}
+
+function renderRecentLog(){
+  const el=document.getElementById('recent-log');
+  const keys=Object.keys(state.checkins).sort().reverse().slice(0,5);
+  if(!keys.length){el.innerHTML='';return;}
+  let html='<div class="section-title" style="margin-top:8px">Recent entries</div>';
+  keys.forEach(k=>{
+    const e=state.checkins[k];
+    const d=new Date(k);const ds=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+    const lines=[['ICICI',e.icici],['UBI',e.ubi],['Slice',e.slice],['CC',e.cc]].filter(([,v])=>v&&v.toLowerCase()!=='nil').map(([l,v])=>`<div style="font-size:12px;color:var(--muted);margin-top:2px">${l}: ${v}</div>`).join('');
+    html+=`<div class="card-sm"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:13px;font-weight:600;color:var(--p500)">${ds}</span><span class="green-badge">logged ✓</span></div>${lines||'<div style="font-size:12px;color:var(--muted)">No transactions</div>'}</div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════
+// CATCH-UP
+// ════════════════════════════════════════════════════════
+function renderCatchup(){
+  const container=document.getElementById('catchup-dates');
+  const end=new Date();end.setDate(end.getDate()-1);
+  const start=new Date('2026-04-14');
+  const missing=[];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(!state.checkins[key])missing.push(new Date(d));
+  }
+  document.getElementById('missing-count').textContent=missing.length+' days missing';
+  if(!missing.length){container.innerHTML='<div class="card" style="text-align:center;padding:24px"><div style="font-size:32px;margin-bottom:8px">🎉</div><div style="font-size:15px;font-weight:600;color:var(--p500)">All caught up!</div></div>';return;}
+  container.innerHTML=missing.map(d=>{
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const dstr=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+    const dayShort=d.toLocaleDateString('en-IN',{weekday:'short'});
+    return`<div class="date-block" id="block-${key}">
+      <div class="date-header"><div class="date-str">${dstr}</div><span class="date-status pending">${dayShort} · pending</span></div>
+      <div class="date-body">
+        <div class="date-q">What happened? Write amounts + what, or nil.</div>
+        <div class="acc-mini-row"><div class="acc-mini-dot" style="background:var(--p400)"></div><span class="acc-mini-label">ICICI</span><input class="acc-mini-input" id="cu-icici-${key}" placeholder="₹140 auto, nil"/></div>
+        <div class="acc-mini-row"><div class="acc-mini-dot" style="background:var(--green)"></div><span class="acc-mini-label">UBI</span><input class="acc-mini-input" id="cu-ubi-${key}" placeholder="nil or amount"/></div>
+        <div class="acc-mini-row"><div class="acc-mini-dot" style="background:var(--amber)"></div><span class="acc-mini-label">Slice</span><input class="acc-mini-input" id="cu-slice-${key}" placeholder="nil or amount"/></div>
+        <div class="acc-mini-row"><div class="acc-mini-dot" style="background:var(--red)"></div><span class="acc-mini-label">CC</span><input class="acc-mini-input" id="cu-cc-${key}" placeholder="nil or amount"/></div>
+        <button class="save-day-btn" onclick="saveCatchupDay('${key}')">Save ${dayShort} ✓</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveCatchupDay(key){
+  const get=id=>document.getElementById(id)?.value||'nil';
+  const icici=get('cu-icici-'+key),ubi=get('cu-ubi-'+key),slice=get('cu-slice-'+key),cc=get('cu-cc-'+key);
+  state.checkins[key]={date:key,icici,ubi,slice,cc,catchup:true,ts:new Date().toISOString()};
+  parseCheckinLine(icici,key,'icici');
+  parseCheckinLine(ubi,key,'ubi');
+  parseCheckinLine(slice,key,'slice');
+  parseCheckinLine(cc,key,'cc');
+  saveState();
+  const block=document.getElementById('block-'+key);
+  const d=new Date(key);const dstr=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});const dayShort=d.toLocaleDateString('en-IN',{weekday:'short'});
+  block.innerHTML=`<div class="date-header" style="background:linear-gradient(135deg,var(--green),#085041)"><div class="date-str">${dstr}</div><span class="date-status done">${dayShort} · saved ✓</span></div><div class="date-body"><div class="day-saved">✓ Entry saved and added to ledger</div></div>`;
+  document.getElementById('missing-count').textContent=document.querySelectorAll('.date-status.pending').length+' days missing';
+}
+
+// ════════════════════════════════════════════════════════
+// EXCEL / CSV IMPORT
+// ════════════════════════════════════════════════════════
+function importSheet(event){
+  const file=event.target.files[0];if(!file)return;
+  const status=document.getElementById('import-status');
+  status.textContent='Reading file...';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let txCount=0;
+      if(file.name.endsWith('.csv')){
+        const text=e.target.result;
+        const rows=text.split('\n').map(r=>r.split(','));
+        const headers=rows[0].map(h=>h.trim().toLowerCase());
+        rows.slice(1).forEach(row=>{
+          if(row.length<3)return;
+          const obj={};headers.forEach((h,i)=>obj[h]=row[i]?.trim()||'');
+          const amt=parseFloat(obj.amount||obj.debit||obj.credit||0);if(!amt)return;
+          const tx={id:uid(),date:obj.date||todayStr(),account:mapAccount(obj.account||obj.bank||''),type:obj.type==='credit'||Number(obj.credit)>0?'credit':'debit',amount:Math.abs(amt),desc:obj.description||obj.narration||obj.desc||'Imported',category:mapCategory(obj.category||obj.type||''),notes:'imported',source:'import'};
+          if(!state.transactions.find(t=>t.date===tx.date&&t.amount===tx.amount&&t.desc===tx.desc))state.transactions.push(tx);
+          txCount++;
+        });
+      } else {
+        const data=new Uint8Array(e.target.result);
+        const wb=XLSX.read(data,{type:'array'});
+        wb.SheetNames.forEach(sheetName=>{
+          const ws=wb.Sheets[sheetName];const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+          if(!rows.length)return;
+          const headers=rows[0].map(h=>String(h||'').trim().toLowerCase());
+          const accFromSheet=mapSheetNameToAccount(sheetName);
+          rows.slice(1).forEach(row=>{
+            if(!row||row.length<2)return;
+            const obj={};headers.forEach((h,i)=>obj[h]=String(row[i]||'').trim());
+            const amt=parseFloat(obj.amount||obj.debit||obj.credit||obj.value||0);
+            if(!amt||isNaN(amt))return;
+            const dateRaw=obj.date||obj.day||'';
+            let dateStr=todayStr();
+            if(dateRaw){try{const dp=new Date(dateRaw);if(!isNaN(dp))dateStr=dp.getFullYear()+'-'+String(dp.getMonth()+1).padStart(2,'0')+'-'+String(dp.getDate()).padStart(2,'0');}catch(err){}}
+            const tx={id:uid(),date:dateStr,account:accFromSheet||mapAccount(obj.account||obj.bank||sheetName),type:(obj.type||'').toLowerCase()==='credit'||Number(obj.credit)>0?'credit':'debit',amount:Math.abs(amt),desc:obj.description||obj.narration||obj.desc||obj.particulars||obj.details||'Imported',category:mapCategory(obj.category||obj.type||obj.particulars||''),notes:'sheet:'+sheetName,source:'import'};
+            if(!state.transactions.find(t=>t.date===tx.date&&Math.abs(t.amount-tx.amount)<0.01&&t.desc===tx.desc))state.transactions.push(tx);
+            txCount++;
+          });
+        });
+      }
+      saveState();renderLedger();renderDashboard();
+      status.style.color='var(--green)';status.textContent='✓ Imported '+txCount+' transactions from "'+file.name+'"';
+    }catch(err){status.style.color='var(--red)';status.textContent='Error reading file: '+err.message;}
+  };
+  if(file.name.endsWith('.csv'))reader.readAsText(file);
+  else reader.readAsArrayBuffer(file);
+}
+
+function mapAccount(raw){
+  const r=(raw||'').toLowerCase();
+  if(r.includes('icici')||r.includes('money moves'))return'icici';
+  if(r.includes('ubi')||r.includes('wealth vault'))return'ubi';
+  if(r.includes('slice'))return'slice';
+  if(r.includes('credit')||r.includes('cc')||r.includes('card'))return'cc';
+  if(r.includes('sip')||r.includes('mutual')||r.includes('invest'))return'sip';
+  if(r.includes('safety')||r.includes('emergency'))return'safety';
+  return'icici';
+}
+function mapSheetNameToAccount(name){
+  const n=name.toLowerCase();
+  if(n.includes('money moves'))return'icici';
+  if(n.includes('ubi')||n.includes('wealth vault'))return'ubi';
+  if(n.includes('slice'))return'slice';
+  if(n.includes('credit'))return'cc';
+  if(n.includes('sip')||n.includes('invest'))return'sip';
+  if(n.includes('safety'))return'safety';
+  if(n.includes('dream')||n.includes('macbook'))return'icici';
+  return null;
+}
+function mapCategory(raw){
+  const r=(raw||'').toLowerCase();
+  if(/auto|cab|bus|metro|travel|transport/.test(r))return'transport';
+  if(/food|eat|restaurant|burger|pizza|coffee|chai|zomato|swiggy/.test(r))return'food';
+  if(/grocery|vegetable|instamart|blinkit|zepto/.test(r))return'grocery';
+  if(/netflix|apple|google|icloud|music|subscription/.test(r))return'subscription';
+  if(/nykaa|amazon|shop|cloth|fashion/.test(r))return'shopping';
+  if(/salary|income|stipend|credit/.test(r))return'salary';
+  if(/sip|mutual|invest/.test(r))return'investment';
+  if(/safety|saving|fd|deposit/.test(r))return'savings';
+  if(/electricity|wifi|maintenance|rent|bill/.test(r))return'fees';
+  return'other';
+}
+
+// ════════════════════════════════════════════════════════
+// AI CHAT — with local fallback intelligence
+// ════════════════════════════════════════════════════════
+function buildContext(){
+  const b=state.balances;
+  const checkinKeys=Object.keys(state.checkins).sort().reverse().slice(0,14);
+  const checkinSummary=checkinKeys.map(k=>{const e=state.checkins[k];return`${k}: ICICI=${e.icici||'nil'} UBI=${e.ubi||'nil'} Slice=${e.slice||'nil'} CC=${e.cc||'nil'}`;}).join('\n');
+  const macGoal=state.dreamJar.find(g=>g.id==='macbook')||{saved:0};
+  const txSummary=state.transactions.slice(-30).map(t=>`${t.date} ${accName(t.account)} ${t.type==='debit'?'-':'+'}₹${t.amount} ${t.desc} [${t.category}]`).join('\n');
+  const dreamJarSummary=state.dreamJar.map(g=>`${g.name}: ₹${g.saved}/₹${g.target} ${g.type} ${g.deadline?'deadline:'+g.deadline:''} ${g.done?'DONE':''}`).join('\n');
+
+  return`You are Raji's personal Wealth Brain — her financial CFO, advisor, and accountability partner.
+
+IDENTITY: Raji, 19 → 20 on Sep 24, 3rd year BA LLB, PES University Bengaluru. From Salem, Tamil Nadu. Thoughtful, self-aware, enjoys romanticizing daily life.
+
+CURRENT BALANCES:
+- ICICI: ${b.icici!==null?'₹'+b.icici:'not set yet'}
+- UBI Wealth Vault: ${b.ubi!==null?'₹'+b.ubi:'not set yet'}
+- Slice: ${b.slice!==null?'₹'+b.slice:'not set yet'}
+- Credit Card 6004 outstanding: ${b.cc!==null?'₹'+b.cc:'not set yet'}
+
+SAVINGS:
+- MacBook savings: ₹${macGoal.saved} / ₹79,999
+- Safety Net: ${state.safetyNet?'₹'+state.safetyNet:'unknown'} / ₹15,000 target
+- SIP: ₹${state.sip.monthly}/month, total ₹${state.sip.total||0} since Oct 2025
+- SIP fund: ${state.sip.fund||'not specified'}
+- Adhi's ₹1,000 lend: ${state.lendAdhi}
+
+DREAM JAR:
+${dreamJarSummary||'No goals set'}
+
+INCOME: ₹2,500/month from Adhithya Holidays. ₹300/day daily allowance.
+
+CC MAY 2026 (unpaid): Burger King ₹1,391 + Belgium Waffle ₹256 + Nykaa ₹1,974 = ₹3,621
+
+RECENT CHECK-INS:
+${checkinSummary||'None yet'}
+
+RECENT TRANSACTIONS (last 30):
+${txSummary||'None yet'}
+
+HISTORICAL PATTERNS (Oct 2025–Apr 2026): Daily auto ₹140 morning + ₹70–80 afternoon ICICI. Zepto/Blinkit/Instamart groceries. Subscriptions: Netflix ₹199, Apple Music ₹59, iCloud ₹100, Google One ₹59. Salary ₹2,500 monthly. House expenses via UBI (electricity ~₹900, wifi ~₹660, maintenance ₹2,000) from dad's money. Spending leaks: midnight food runs, impulse snacks, gifts for Adhi.
+
+TODAY: ${todayFull()}
+
+Be her warm, honest, specific financial friend. Use ₹. No generic advice. Always reference HER numbers. Keep responses under 200 words unless asked for detail.`;
+}
+
+// Local fallback intelligence
+function localAnswer(msg){
+  const m=msg.toLowerCase();
+  const b=state.balances;
+  const mac=state.dreamJar.find(g=>g.id==='macbook');
+  const txs=state.transactions;
+  const totalDebit=txs.filter(t=>t.type==='debit').reduce((s,t)=>s+Number(t.amount),0);
+  const totalCredit=txs.filter(t=>t.type==='credit').reduce((s,t)=>s+Number(t.amount),0);
+
+  if(/where.*money|balance|how much/i.test(m)){
+    const liquid=(b.icici||0)+(b.ubi||0)+(b.slice||0);
+    return`Here's your current money map 💗\n\n• ICICI: ${b.icici!==null?'₹'+fmtN(b.icici):'not set — tap R to update'}\n• UBI: ${b.ubi!==null?'₹'+fmtN(b.ubi):'not set'}\n• Slice: ${b.slice!==null?'₹'+fmtN(b.slice):'not set'}\n• Total liquid: ${liquid>0?'₹'+fmtN(liquid):'update your balances first'}\n• CC outstanding: ${b.cc!==null?'₹'+fmtN(b.cc):'not set'}\n• MacBook savings: ₹${fmtN(mac?mac.saved:0)}\n• Safety net: ${state.safetyNet?'₹'+fmtN(state.safetyNet):'not set yet'}`;
+  }
+
+  if(/spending|pattern|leak|where.*spend/i.test(m)){
+    if(!txs.length)return'No transactions logged yet! Submit a check-in first and I\'ll analyze your spending patterns for you. 🌸';
+    const cats={};txs.filter(t=>t.type==='debit').forEach(t=>{cats[t.category]=(cats[t.category]||0)+Number(t.amount);});
+    const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+    const lines=sorted.slice(0,5).map(([c,a])=>`• ${c}: ₹${fmtN(Math.round(a))}`).join('\n');
+    const biggest=sorted[0];
+    return`Your spending breakdown from ${txs.length} logged transactions:\n\n${lines}\n\nBiggest category: **${biggest?biggest[0]:'—'}** — ${biggest&&biggest[1]>2000?'worth keeping an eye on! 👀':'looking controlled ✓'}`;
+  }
+
+  if(/macbook|goal/i.test(m)){
+    const pct=mac?Math.round(mac.saved/79999*100):0;
+    const rem=mac?79999-mac.saved:79999;
+    return`MacBook update 💻\n\n₹${fmtN(mac?mac.saved:0)} saved of ₹79,999 (${pct}%)\nStill need: ₹${fmtN(rem)}\n\nAt ₹300/day → ${Math.ceil(rem/300)} days left\nAt ₹500/day → ${Math.ceil(rem/500)} days left\n\nYou've got FDs running from March/April — keep it up! 🌸`;
+  }
+
+  if(/credit card|cc|bill|outstanding/i.test(m)){
+    return`Credit card status 💳\n\nMay 2026 outstanding: ₹${b.cc!==null?fmtN(b.cc):'3,621 (original figure)'}\n\nBreakdown:\n• Burger King: ₹1,391\n• Belgium Waffle: ₹256\n• Nykaa (haircare): ₹1,974\n\nThis is your biggest immediate financial obligation. Pay before the due date to avoid interest — CC interest rates are typically 36–48% per year. 🚨`;
+  }
+
+  if(/sip|invest|mutual/i.test(m)){
+    const proj10=state.sip.monthly*((Math.pow(1+0.01,120)-1)/0.01)*1.01;
+    return`SIP update 📈\n\n• Monthly: ₹${fmtN(state.sip.monthly)}\n• Total invested: ₹${fmtN(state.sip.total||0)}\n• Running since Oct 2025\n• At 12% return, 10yr projection: ~₹${fmtN(Math.round(proj10))}\n\nSIP is your best wealth-building habit right now. Even ₹1,000/month compounding for 20 years = ~₹33L. Keep going! 🌱`;
+  }
+
+  if(/tax|itr|file/i.test(m)){
+    return`Tax snapshot 📄\n\nFY 2025-26:\n• Your salary ~₹30,000/yr — well below ₹3L exemption\n• Tax owed: likely ₹0\n• Still file ITR-1 by July 31, 2026\n• Go to incometax.gov.in → PAN login → AY 2026-27\n• Get Form 16 from Adhithya Holidays first\n\nCheck the Tax tab for the full step-by-step guide! 🌸`;
+  }
+
+  if(/safety|emergency/i.test(m)){
+    const sn=state.safetyNet||0;const target=15000;const pct=Math.round(sn/target*100);const rem=target-sn;
+    return`Safety net status 🪺\n\n₹${fmtN(sn)} of ₹15,000 target (${pct}%)\nStill need: ₹${fmtN(Math.max(0,rem))}\n\n${sn<5000?'Priority: try to reach ₹5,000 first — that covers 2 weeks of essentials.':sn<10000?'Good progress! Aim for ₹10,000 next.':'You\'re doing really well on your emergency fund! ✨'}`;
+  }
+
+  return`I'm running in offline mode right now, but I still know your finances well! 💗\n\nI can see: ${b.icici!==null?'ICICI ₹'+fmtN(b.icici):'balances not set yet'}, ${txs.length} transactions logged, MacBook at ${mac?Math.round(mac.saved/79999*100):0}%.\n\nTry asking:\n• "Where is my money?"\n• "Analyze my spending"\n• "MacBook goal"\n• "Credit card bill"\n• "SIP update"\n• "Tax basics"`;
+}
+
+function chipSend(text){addMsg(text,'user');state.chatHistory.push({role:'user',content:text});callClaude(text);}
 
 function sendChat(){
-const input=document.getElementById('chatInput');
-const text=input.value.trim();
-if(!text)return;
-
-const box=document.getElementById('chatBox');
-
-box.innerHTML+=`<div class="card"><strong>You:</strong><br>${text}</div>`;
-
-const response=getOfflineAI(text);
-
-setTimeout(()=>{
-box.innerHTML+=`<div class="card"><strong>Wealth Brain:</strong><br>${response}</div>`;
-box.scrollTop=box.scrollHeight;
-},500);
-
-input.value='';
+  const input=document.getElementById('chat-input');
+  const val=input.value.trim();if(!val)return;
+  input.value='';addMsg(val,'user');state.chatHistory.push({role:'user',content:val});callClaude(val);
 }
 
-function getOfflineAI(text){
-const lower=text.toLowerCase();
-
-if(lower.includes('spending')){
-return `You currently have ${state.transactions.length} tracked transactions. Continue using check-ins daily for better pattern analysis.`;
+function addMsg(text,type){
+  const area=document.getElementById('chat-messages');
+  const row=document.createElement('div');row.className='msg-row '+type;
+  const av=document.createElement('div');av.className='msg-av '+(type==='bot'?'bot-av':'user-av');av.textContent=type==='bot'?'W':'R';
+  const bubble=document.createElement('div');bubble.className='bubble';bubble.textContent=text;
+  row.appendChild(av);row.appendChild(bubble);area.appendChild(row);area.scrollTop=area.scrollHeight;
+  return bubble;
 }
 
-if(lower.includes('goal')){
-return `You currently have ${state.goals.length} active goals in DreamJar.`;
+function addTyping(){
+  const area=document.getElementById('chat-messages');
+  const row=document.createElement('div');row.className='msg-row bot';row.id='typing-indicator';
+  const av=document.createElement('div');av.className='msg-av bot-av';av.textContent='W';
+  const bubble=document.createElement('div');bubble.className='bubble';bubble.innerHTML='<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+  row.appendChild(av);row.appendChild(bubble);area.appendChild(row);area.scrollTop=area.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typing-indicator');if(t)t.remove();}
+
+async function callClaude(userMsg){
+  addTyping();
+  const ctx=buildContext();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:ctx+'\n\n---\nUser: '+userMsg}]})
+    });
+    if(!res.ok)throw new Error('API error '+res.status);
+    const data=await res.json();
+    removeTyping();
+    const reply=data.content&&data.content[0]&&data.content[0].text?data.content[0].text:localAnswer(userMsg);
+    addMsg(reply,'bot');state.chatHistory.push({role:'assistant',content:reply});
+    if(state.chatHistory.length>30)state.chatHistory=state.chatHistory.slice(-30);
+    document.getElementById('chat-mode-badge').textContent='AI-powered · Claude';
+    saveState();
+  }catch(e){
+    removeTyping();
+    const localReply=localAnswer(userMsg);
+    addMsg(localReply,'bot');
+    document.getElementById('chat-mode-badge').textContent='Offline mode · local analysis';
+    state.chatHistory.push({role:'assistant',content:localReply});
+    saveState();
+  }
 }
 
-return `AI connection is not configured yet, but your financial data is still being safely tracked locally.`;
-}
+// ════════════════════════════════════════════════════════
+// MODAL HELPERS
+// ════════════════════════════════════════════════════════
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-function importExcel(event){
-const file=event.target.files[0];
-if(!file)return;
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-const data=new Uint8Array(e.target.result);
-const workbook=XLSX.read(data,{type:'array'});
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
-const rows=XLSX.utils.sheet_to_json(sheet);
-
-rows.forEach(row=>{
-state.transactions.push({
-id:'txn_'+Date.now()+Math.random(),
-date:row.Date||row.date||new Date().toLocaleDateString(),
-description:row.Description||row.description||JSON.stringify(row),
-category:row.Category||'Imported'
-});
-});
-
-save();
-renderTransactions();
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+loadState();
+applyDark();
 renderDashboard();
-alert('Excel imported successfully!');
-};
-
-reader.readAsArrayBuffer(file);
-}
-
-function renderAll(){
-renderDashboard();
-renderTransactions();
-renderCheckins();
+renderCheckin();
 renderGoals();
-}
 
-load();
+// Sunday check on load
+if(isSunday()){
+  setTimeout(()=>{
+    const d=new Date();const missing=[];
+    for(let i=6;i>=0;i--){const dd=new Date(d);dd.setDate(d.getDate()-i);const key=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');if(!state.checkins[key])missing.push(dd.toLocaleDateString('en-IN',{day:'numeric',month:'short'}));}
+    if(missing.length>2)alert('Sunday reminder 🌸 You have '+missing.length+' days not logged this week: '+missing.join(', ')+'. Head to Catch-up to fill them in!');
+  },1500);
+}
 </script>
 </body>
 </html>
